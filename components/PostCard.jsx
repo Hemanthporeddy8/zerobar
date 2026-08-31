@@ -135,12 +135,31 @@ export default function PostCard({ post, bookmarked, following, onChange, showFo
   const authorEmoji = post.profiles?.avatar_emoji || '🧑';
   const isOwn = user && user.id === post.user_id;
 
+  const isImage =
+    Boolean(post.media_url) ||
+    (typeof post.media_emoji === 'string' &&
+      (post.media_emoji.startsWith('data:image') ||
+        post.media_emoji.startsWith('http') ||
+        post.media_emoji.startsWith('/')));
+
+  const mediaSrc = post.media_url || post.media_emoji;
+
   return (
     <div className="card">
-      <div className="card-media">
+      <div className="card-media" style={isImage ? { height: 180, background: '#0D1122' } : {}}>
         <span className="kind">{post.kind}</span>
-        {post.media_emoji || '📰'}
+        {isImage ? (
+          <img
+            src={mediaSrc}
+            alt={post.title}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            loading="lazy"
+          />
+        ) : (
+          post.media_emoji || '📰'
+        )}
       </div>
+
       <div className="card-body">
         <div className="author-row">
           <span className="a-avatar">{authorEmoji}</span>
