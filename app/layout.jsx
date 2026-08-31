@@ -3,10 +3,20 @@ import { AuthProvider } from '../components/AuthProvider';
 import OfflineRegister from '../components/OfflineRegister';
 
 export const metadata = {
-  title: 'Zerobar',
-  description: 'Full feed. Zero signal.',
-  manifest: '/manifest.json'
+  title: 'Zerobar — Full feed. Zero signal.',
+  description: 'Ultra-fast, low-bandwidth, offline-first social reader for commutes, flights, and low signal zones.',
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/icon.svg',
+    apple: '/icon.svg'
+  }
 };
+
+export const viewport = {
+  themeColor: '#1C2242'
+};
+
+
 
 export default function RootLayout({ children }) {
   return (

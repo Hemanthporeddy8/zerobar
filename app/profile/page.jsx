@@ -84,6 +84,19 @@ function ProfileInner() {
       {posts.map((p) => (
         <PostCard key={p.id} post={p} bookmarked={false} following={false} onChange={load} showFollow={false} />
       ))}
+
+      <div style={{ marginTop: 30, padding: '20px 16px 40px', borderTop: '1px solid var(--line)', textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 14, fontSize: 12, color: 'var(--mist-dim)', fontFamily: "'IBM Plex Mono', monospace" }}>
+          <a href="/advertise" style={{ color: 'var(--amber)' }}>📣 Advertise</a>
+          <a href="/admin" style={{ color: 'var(--mist)' }}>🛡️ Admin</a>
+          <a href="/privacy" style={{ color: 'var(--mist)' }}>Privacy</a>
+          <a href="/terms" style={{ color: 'var(--mist)' }}>Terms</a>
+        </div>
+        <p style={{ color: 'var(--mist-dim)', fontSize: 10.5, marginTop: 10, fontFamily: "'IBM Plex Mono', monospace" }}>
+          Zerobar v1.0 · Offline-first social reader
+        </p>
+      </div>
+
       <BottomNav active="profile" />
     </>
   );

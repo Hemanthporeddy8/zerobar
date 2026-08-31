@@ -1,10 +1,25 @@
 {
-  "name": "Zerobar",
+  "name": "Zerobar — Offline Social Reader",
   "short_name": "Zerobar",
-  "description": "Full feed. Zero signal.",
+  "description": "Full feed. Zero signal. Offline-first social reader.",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#12162A",
-  "theme_color": "#12162A",
-  "icons": []
+  "theme_color": "#1C2242",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
+
