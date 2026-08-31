@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthProvider';
 import RequireAuth from '../components/RequireAuth';
@@ -9,6 +9,7 @@ import BottomNav from '../components/BottomNav';
 import PostCard from '../components/PostCard';
 import ComposeModal from '../components/ComposeModal';
 import SponsoredCard from '../components/SponsoredCard';
+import { getOfflineStash, saveOfflineStash, getOfflineSettings } from '../lib/offlineStorage';
 
 // How often a sponsored card appears in the feed — every Nth position.
 const SPONSORED_EVERY = 4;
@@ -22,39 +23,89 @@ function FeedInner() {
   const [bookmarkedIds, setBookmarkedIds] = useState(new Set());
   const [followingIds, setFollowingIds] = useState(new Set());
 
-  useEffect(() => {
-    loadFeed();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function loadFeed() {
+  const loadFeed = useCallback(async () => {
     setLoading(true);
 
-    const { data: postData } = await supabase
-      .from('posts')
-      .select('*, profiles:user_id ( username, avatar_emoji )')
-      .order('created_at', { ascending: false })
-      .limit(50);
-    setPosts(postData || []);
+    try {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        // Direct offline load
+        const stash = getOfflineStash();
+        setPosts(stash.posts || []);
+        setSponsored(stash.sponsored || []);
+        setBookmarkedIds(new Set(stash.bookmarks || []));
+        setLoading(false);
+        return;
+      }
 
-    const { data: sponsoredData } = await supabase
-      .from('sponsored_posts')
-      .select('*')
-      .eq('active', true)
-      .order('created_at', { ascending: false })
-      .limit(10);
-    setSponsored(sponsoredData || []);
+      const { data: postData, error: postErr } = await supabase
+        .from('posts')
+        .select('*, profiles:user_id ( username, avatar_emoji )')
+        .order('created_at', { ascending: false })
+        .limit(60);
 
-    if (user) {
-      const { data: bms } = await supabase.from('bookmarks').select('post_id').eq('user_id', user.id);
-      setBookmarkedIds(new Set((bms || []).map((b) => b.post_id)));
+      const { data: sponsoredData } = await supabase
+        .from('sponsored_posts')
+        .select('*')
+        .eq('active', true)
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-      const { data: fls } = await supabase.from('follows').select('following_id').eq('follower_id', user.id);
-      setFollowingIds(new Set((fls || []).map((f) => f.following_id)));
+      if (postErr) throw postErr;
+
+      const livePosts = postData || [];
+      const liveSponsored = sponsoredData || [];
+
+      setPosts(livePosts);
+      setSponsored(liveSponsored);
+
+      let bmsList = [];
+      if (user) {
+        const { data: bms } = await supabase.from('bookmarks').select('post_id').eq('user_id', user.id);
+        bmsList = (bms || []).map((b) => b.post_id);
+        setBookmarkedIds(new Set(bmsList));
+
+        const { data: fls } = await supabase.from('follows').select('following_id').eq('follower_id', user.id);
+        setFollowingIds(new Set((fls || []).map((f) => f.following_id)));
+      }
+
+      // Auto stash with user data saver budget
+      const settings = getOfflineSettings();
+      saveOfflineStash({
+        posts: livePosts,
+        reels: livePosts.filter((p) => (p.kind || '').toLowerCase().startsWith('reel')),
+        sponsored: liveSponsored,
+        bookmarks: bmsList,
+        budgetMB: settings.dataSaverMB || 2
+      });
+    } catch (err) {
+      console.warn('Network load failed, falling back to offline stash:', err);
+      const stash = getOfflineStash();
+      setPosts(stash.posts || []);
+      setSponsored(stash.sponsored || []);
+      setBookmarkedIds(new Set(stash.bookmarks || []));
+    } finally {
+      setLoading(false);
     }
+  }, [user]);
 
-    setLoading(false);
-  }
+  useEffect(() => {
+    loadFeed();
+
+    const handleStashUpdate = () => {
+      const stash = getOfflineStash();
+      if (stash.posts?.length) {
+        setPosts(stash.posts);
+      }
+    };
+
+    window.addEventListener('zerobar_stash_updated', handleStashUpdate);
+    window.addEventListener('online', loadFeed);
+
+    return () => {
+      window.removeEventListener('zerobar_stash_updated', handleStashUpdate);
+      window.removeEventListener('online', loadFeed);
+    };
+  }, [loadFeed]);
 
   // Interleave sponsored cards into the feed every SPONSORED_EVERY posts.
   const items = [];
@@ -69,7 +120,7 @@ function FeedInner() {
 
   return (
     <>
-      <Header />
+      <Header onRefresh={loadFeed} />
       <div className="section-label">Today's feed</div>
       {loading && <p className="empty-note">Loading…</p>}
       {!loading && posts.length === 0 && (
@@ -104,3 +155,4 @@ export default function FeedPage() {
     </RequireAuth>
   );
 }
+

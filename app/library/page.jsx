@@ -1,38 +1,61 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { useAuth } from '../../components/AuthProvider';
 import RequireAuth from '../../components/RequireAuth';
 import Header from '../../components/Header';
 import BottomNav from '../../components/BottomNav';
 import PostCard from '../../components/PostCard';
+import { getOfflineStash } from '../../lib/offlineStorage';
 
 function LibraryInner() {
   const { user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function load() {
+  const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase
-      .from('bookmarks')
-      .select('post_id, posts:post_id ( *, profiles:user_id ( username, avatar_emoji ) )')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-    setPosts((data || []).map((row) => row.posts).filter(Boolean));
-    setLoading(false);
-  }
+
+    try {
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        const stash = getOfflineStash();
+        const bookmarkedSet = new Set(stash.bookmarks || []);
+        const cachedPosts = (stash.posts || []).filter((p) => bookmarkedSet.has(p.id));
+        setPosts(cachedPosts);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('bookmarks')
+        .select('post_id, posts:post_id ( *, profiles:user_id ( username, avatar_emoji ) )')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPosts((data || []).map((row) => row.posts).filter(Boolean));
+    } catch (err) {
+      console.warn('Library fetch failed, reading from offline stash:', err);
+      const stash = getOfflineStash();
+      const bookmarkedSet = new Set(stash.bookmarks || []);
+      const cachedPosts = (stash.posts || []).filter((p) => bookmarkedSet.has(p.id));
+      setPosts(cachedPosts);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    load();
+    window.addEventListener('online', load);
+    return () => window.removeEventListener('online', load);
+  }, [load]);
 
   return (
     <>
-      <Header />
+      <Header onRefresh={load} />
       <div className="section-label">Your library</div>
       {loading && <p className="empty-note">Loading…</p>}
       {!loading && posts.length === 0 && (
@@ -53,3 +76,4 @@ export default function LibraryPage() {
     </RequireAuth>
   );
 }
+
