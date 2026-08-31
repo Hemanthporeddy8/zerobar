@@ -1,0 +1,10 @@
+{
+  "name": "Zerobar",
+  "short_name": "Zerobar",
+  "description": "Full feed. Zero signal.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#12162A",
+  "theme_color": "#12162A",
+  "icons": []
+}
