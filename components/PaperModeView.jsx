@@ -10,7 +10,7 @@ function playPaperSound() {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return;
     const ctx = new AudioContext();
-    const len = ctx.sampleRate * 0.14; // 140 ms
+    const len = ctx.sampleRate * 0.14;
     const buffer = ctx.createBuffer(1, len, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < len; i++) {
@@ -18,23 +18,18 @@ function playPaperSound() {
     }
     const src = ctx.createBufferSource();
     src.buffer = buffer;
-
     const bp = ctx.createBiquadFilter();
     bp.type = 'bandpass';
     bp.frequency.value = 1400;
     bp.Q.value = 0.9;
-
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.22, ctx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.14);
-
     src.connect(bp);
     bp.connect(g);
     g.connect(ctx.destination);
     src.start();
-  } catch {
-    /* ignore */
-  }
+  } catch { /* ignore */ }
 }
 
 export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRefresh, onExit }) {
@@ -42,32 +37,59 @@ export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRe
   const [flippedSet, setFlippedSet] = useState(new Set());
   const [isAnimating, setIsAnimating] = useState(false);
   const touchStartX = useRef(null);
+  const pageRefs = useRef([]);
+  const isDragging = useRef(false);
 
   const totalSheets = posts.length;
 
-  /* ── Flip helpers ── */
-  const flipNext = useCallback(() => {
-    if (currentFlip >= totalSheets || isAnimating) return;
-    setIsAnimating(true);
-    playPaperSound();
-    setFlippedSet(prev => new Set(prev).add(currentFlip));
-    setCurrentFlip(prev => prev + 1);
-    setTimeout(() => setIsAnimating(false), 900);
-  }, [currentFlip, totalSheets, isAnimating]);
+  /* ── DOM helpers: set transform + fold-shade directly for drag perf ── */
+  function setPageRotation(index, deg) {
+    const el = pageRefs.current[index];
+    if (!el) return;
+    el.style.transform = `rotateY(${deg}deg)`;
+    const t = Math.min(Math.abs(deg) / 180, 1);
+    el.querySelectorAll('.fb-fold-shade').forEach(s => {
+      s.style.opacity = String(t * 0.85);
+    });
+  }
 
-  const flipPrev = useCallback(() => {
-    if (currentFlip <= 0 || isAnimating) return;
-    setIsAnimating(true);
+  /* ── Snap helpers (shared by buttons, keyboard, drag) ── */
+  const snapForward = useCallback((pageIndex) => {
+    const el = pageRefs.current[pageIndex];
+    if (el) el.classList.remove('fb-dragging');
     playPaperSound();
-    const idx = currentFlip - 1;
+    setPageRotation(pageIndex, -180);
+    setFlippedSet(prev => new Set(prev).add(pageIndex));
+    setCurrentFlip(prev => prev + 1);
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 700);
+  }, []);
+
+  const snapBack = useCallback((pageIndex) => {
+    const el = pageRefs.current[pageIndex];
+    if (el) el.classList.remove('fb-dragging');
+    playPaperSound();
+    setPageRotation(pageIndex, 0);
     setFlippedSet(prev => {
       const s = new Set(prev);
-      s.delete(idx);
+      s.delete(pageIndex);
       return s;
     });
     setCurrentFlip(prev => prev - 1);
-    setTimeout(() => setIsAnimating(false), 900);
-  }, [currentFlip, isAnimating]);
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 700);
+  }, []);
+
+  /* ── Button / keyboard flip ── */
+  const flipNext = useCallback(() => {
+    if (currentFlip >= totalSheets || isAnimating || isDragging.current) return;
+    snapForward(currentFlip);
+  }, [currentFlip, totalSheets, isAnimating, snapForward]);
+
+  const flipPrev = useCallback(() => {
+    if (currentFlip <= 0 || isAnimating || isDragging.current) return;
+    snapBack(currentFlip - 1);
+  }, [currentFlip, isAnimating, snapBack]);
 
   /* ── Keyboard ── */
   useEffect(() => {
@@ -84,14 +106,80 @@ export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRe
     return () => window.removeEventListener('keydown', onKey);
   }, [flipNext, flipPrev]);
 
-  /* ── Touch swipe ── */
+  /* ── Corner drag handler (pointer events for mouse + touch) ── */
+  function handleCornerDown(e, pageIndex, direction) {
+    if (isAnimating) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const pageEl = pageRefs.current[pageIndex];
+    if (!pageEl) return;
+
+    const handle = e.currentTarget;
+    const startX = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+    const width = pageEl.offsetWidth || 300;
+
+    isDragging.current = true;
+    pageEl.classList.add('fb-dragging');
+    try { handle.setPointerCapture(e.pointerId); } catch {}
+
+    function onMove(ev) {
+      const cx = ev.clientX ?? ev.touches?.[0]?.clientX ?? startX;
+      const dx = cx - startX;
+      let deg;
+      if (direction === 'forward') {
+        deg = Math.max(-180, Math.min(0, (dx / width) * 180));
+      } else {
+        deg = Math.max(-180, Math.min(0, -180 + (dx / width) * 180));
+      }
+      setPageRotation(pageIndex, deg);
+    }
+
+    function onUp(ev) {
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup', onUp);
+      handle.removeEventListener('pointercancel', onUp);
+
+      const cx = ev.clientX ?? ev.changedTouches?.[0]?.clientX ?? startX;
+      const dx = cx - startX;
+      const deg = direction === 'forward'
+        ? Math.max(-180, Math.min(0, (dx / width) * 180))
+        : Math.max(-180, Math.min(0, -180 + (dx / width) * 180));
+
+      pageEl.classList.remove('fb-dragging');
+      isDragging.current = false;
+
+      if (direction === 'forward') {
+        if (deg < -90) {
+          snapForward(pageIndex);
+        } else {
+          // snap back to flat
+          setPageRotation(pageIndex, 0);
+        }
+      } else {
+        if (deg > -90) {
+          snapBack(pageIndex);
+        } else {
+          // snap back to flipped
+          setPageRotation(pageIndex, -180);
+        }
+      }
+    }
+
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+    handle.addEventListener('pointercancel', onUp);
+  }
+
+  /* ── Touch swipe (for the whole book area, not corners) ── */
   function handleTouchStart(e) {
+    if (isDragging.current) return;
     touchStartX.current = e.touches[0].clientX;
   }
   function handleTouchEnd(e) {
-    if (touchStartX.current === null) return;
+    if (isDragging.current || touchStartX.current === null) return;
     const dx = touchStartX.current - e.changedTouches[0].clientX;
-    if (Math.abs(dx) > 50) {
+    if (Math.abs(dx) > 60) {
       dx > 0 ? flipNext() : flipPrev();
     }
     touchStartX.current = null;
@@ -172,7 +260,7 @@ export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRe
         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #6A5F50', borderBottom: '1px solid #6A5F50', padding: '3px 0', fontSize: 10.5, fontFamily: "'IBM Plex Mono', monospace", color: '#8A7D6B' }}>
           <span>FLIP BOOK EDITION</span>
           <span>{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</span>
-          <span>SWIPE TO TURN</span>
+          <span>DRAG CORNER TO TURN</span>
         </div>
       </div>
 
@@ -184,10 +272,14 @@ export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRe
 
           {posts.map((post, i) => {
             const isFlipped = flippedSet.has(i);
+            const canForward = i === currentFlip;
+            const canBack = i === currentFlip - 1;
+
             return (
               <div
                 key={post.id || i}
-                className={`fb-page${isFlipped ? ' fb-flipped' : ''}`}
+                ref={el => { pageRefs.current[i] = el; }}
+                className={`fb-page${isFlipped ? ' fb-flipped' : ''}${canForward ? ' fb-can-forward' : ''}${canBack ? ' fb-can-back' : ''}`}
                 style={{ zIndex: isFlipped ? totalSheets + i : totalSheets - i }}
               >
                 {/* Front face — PostCard */}
@@ -201,6 +293,7 @@ export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRe
                     />
                   </div>
                   <div className="fb-page-num" style={{ right: 16 }}>{i + 1}</div>
+                  <div className="fb-fold-shade" />
                 </div>
 
                 {/* Back face — decorative ruled paper */}
@@ -221,15 +314,31 @@ export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRe
                     <span style={{ fontStyle: 'italic' }}>Turn to continue reading…</span>
                   </div>
                   <div className="fb-page-num" style={{ left: 16 }}>{i + 1}</div>
+                  <div className="fb-fold-shade fb-fold-shade-back" />
                 </div>
+
+                {/* Dog-ear corner grab handles */}
+                <div
+                  className="fb-corner fb-corner-br"
+                  onPointerDown={(e) => handleCornerDown(e, i, 'forward')}
+                />
+                <div
+                  className="fb-corner fb-corner-bl"
+                  onPointerDown={(e) => handleCornerDown(e, i, 'backward')}
+                />
               </div>
             );
           })}
         </div>
       </div>
 
+      {/* ── Hint ── */}
+      <div style={{ textAlign: 'center', marginTop: 10, color: '#a99a80', fontSize: 12.5, fontFamily: "'IBM Plex Mono', monospace", fontStyle: 'italic', letterSpacing: 0.5 }}>
+        grab the corner &amp; drag to turn the page
+      </div>
+
       {/* ── Controls ── */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 20, flexShrink: 0 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 12, flexShrink: 0 }}>
         <button
           onClick={flipPrev}
           disabled={currentFlip === 0 || isAnimating}
@@ -251,9 +360,9 @@ export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRe
         {pageLabel}
       </div>
 
-      {/* ── Hint ── */}
-      <div style={{ textAlign: 'center', marginTop: 8, color: '#6A5F50', fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}>
-        👆 Swipe left / right or press <b>[←] [→]</b> keys to turn pages
+      {/* ── Keyboard hint ── */}
+      <div style={{ textAlign: 'center', marginTop: 6, color: '#6A5F50', fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}>
+        👆 Swipe, drag corners, or press <b>[←] [→]</b> keys
       </div>
     </div>
   );

@@ -918,7 +918,7 @@ button {
   width: 18px;
   background: linear-gradient(90deg, #3a2818, #5a3d24);
   border-radius: 4px 0 0 4px;
-  z-index: 5;
+  z-index: 50;
 }
 
 /* ── individual page (one physical sheet) ── */
@@ -930,11 +930,18 @@ button {
   height: 100%;
   transform-style: preserve-3d;
   transform-origin: left center;
-  transition: transform 1s cubic-bezier(.65, .05, .36, 1);
+  transition: transform 0.6s cubic-bezier(.4, .1, .3, 1), box-shadow 0.3s ease;
+  will-change: transform;
 }
 
+/* disable CSS transition during pointer drag for 60fps */
+.fb-page.fb-dragging {
+  transition: none !important;
+}
+
+/* flipped pages sit above */
 .fb-flipped {
-  transform: rotateY(-180deg);
+  z-index: 40 !important;
 }
 
 /* ── page faces ── */
@@ -946,16 +953,16 @@ button {
   border-radius: 0 6px 6px 0;
   overflow: hidden;
   background: var(--paper, #fdfaf3);
+  box-shadow: 0 0 12px rgba(0,0,0,0.12) inset, 2px 0 6px rgba(0,0,0,0.15);
 }
 
 .fb-front {
-  box-shadow: 0 0 12px rgba(0,0,0,0.10) inset, 2px 0 6px rgba(0,0,0,0.12);
+  /* front-specific overrides */
 }
 
 .fb-back {
   transform: rotateY(180deg);
   background: #f6f0e2;
-  box-shadow: 0 0 12px rgba(0,0,0,0.10) inset, -2px 0 6px rgba(0,0,0,0.12);
 }
 
 .fb-face-scroll {
@@ -965,15 +972,71 @@ button {
   -webkit-overflow-scrolling: touch;
 }
 
-/* shadow flare while page is mid-flip */
-.fb-page:not(.fb-flipped):hover .fb-front {
-  box-shadow: 0 0 18px rgba(0,0,0,0.18) inset, 4px 0 14px rgba(0,0,0,0.22);
+/* ── fold shade: darkening gradient that follows the curl ── */
+.fb-fold-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to left, rgba(0,0,0,0.35), rgba(0,0,0,0) 45%);
+  opacity: 0;
+  border-radius: 0 6px 6px 0;
+  z-index: 12;
+}
+
+.fb-fold-shade-back {
+  background: linear-gradient(to right, rgba(0,0,0,0.35), rgba(0,0,0,0) 45%);
+}
+
+/* ── dog-ear corner grab handles ── */
+.fb-corner {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  bottom: 0;
+  z-index: 60;
+  cursor: grab;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  touch-action: none;
+}
+
+.fb-corner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 50%, rgba(139,94,52,0.55) 51%);
+  border-radius: 0 0 6px 0;
+}
+
+.fb-corner-br {
+  right: 0;
+}
+
+.fb-corner-bl {
+  left: 0;
+  transform: scaleX(-1);
+}
+
+/* show corners only on the correct pages */
+.fb-page.fb-can-forward .fb-corner-br {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fb-page.fb-can-back .fb-corner-bl {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fb-corner:active {
+  cursor: grabbing;
 }
 
 /* page number badge */
 .fb-page-num {
   position: absolute;
-  bottom: 12px;
+  bottom: 14px;
   font-size: 11px;
   color: #a09585;
   font-family: 'IBM Plex Mono', monospace;
