@@ -48,7 +48,7 @@ create table if not exists public.posts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   category text default 'Trending',
-  kind text default 'Post',              -- 'Post' | 'Quick read' | 'Reel · 0:18' | 'Story · 15s'
+  kind text default 'Post',              -- 'Post' | 'Quick read' | 'Photo' | 'Story · 15s'
   title text not null,
   media_emoji text default '✍️',
   is_repost boolean default false,

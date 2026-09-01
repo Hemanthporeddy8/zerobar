@@ -75,7 +75,6 @@ function FeedInner() {
       const settings = getOfflineSettings();
       saveOfflineStash({
         posts: livePosts,
-        reels: livePosts.filter((p) => (p.kind || '').toLowerCase().startsWith('reel')),
         sponsored: liveSponsored,
         bookmarks: bmsList,
         budgetMB: settings.dataSaverMB || 2

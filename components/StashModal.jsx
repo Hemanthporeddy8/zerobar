@@ -28,14 +28,6 @@ export default function StashModal({ onClose, onStashed }) {
         .order('created_at', { ascending: false })
         .limit(300);
 
-      setProgressText('Downloading reels & micro-stories…');
-      const { data: reelData } = await supabase
-        .from('posts')
-        .select('*, profiles:user_id ( username, avatar_emoji )')
-        .ilike('kind', 'Reel%')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
       setProgressText('Downloading offline-safe sponsored cards…');
       const { data: sponsoredData } = await supabase
         .from('sponsored_posts')
@@ -45,7 +37,6 @@ export default function StashModal({ onClose, onStashed }) {
 
       const meta = saveOfflineStash({
         posts: postData || [],
-        reels: reelData || [],
         sponsored: sponsoredData || [],
         budgetMB: activeMB
       });
@@ -174,7 +165,7 @@ export default function StashModal({ onClose, onStashed }) {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--text-secondary)', marginTop: 6 }}>
                 <span>Estimated Feed Items:</span>
-                <span style={{ color: 'var(--text-primary)' }}>~{Math.round(activeMB * 25)} posts + reels</span>
+                <span style={{ color: 'var(--text-primary)' }}>~{Math.round(activeMB * 25)} articles & posts</span>
               </div>
             </div>
 

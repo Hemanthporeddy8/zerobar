@@ -6,7 +6,7 @@ import { useAuth } from './AuthProvider';
 import { queueOfflineAction } from '../lib/offlineStorage';
 
 const CATEGORIES = ['Trending', 'Local', 'Tech', 'Career'];
-const EMOJI_BADGES = ['✍️', '📸', '⚡', '🚀', '💡', '🚇', '🎬', '☕', '🎧', '📣'];
+const EMOJI_BADGES = ['✍️', '📸', '⚡', '🚀', '💡', '🚇', '🗞️', '☕', '🎧', '📣'];
 
 export default function ComposeModal({ onClose, onPosted }) {
   const { user } = useAuth();
@@ -63,7 +63,7 @@ export default function ComposeModal({ onClose, onPosted }) {
     setSubmitting(true);
 
     const mediaValue = imagePreview || selectedEmoji || '✍️';
-    const kind = imagePreview ? 'Photo' : selectedEmoji === '🎬' ? 'Reel · 0:15' : 'Post';
+    const kind = imagePreview ? 'Photo' : 'Post';
 
     const postPayload = {
       user_id: user.id,

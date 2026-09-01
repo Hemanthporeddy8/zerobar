@@ -1,7 +1,7 @@
 # Zerobar — starter app (Next.js + Supabase)
 
 This is a real, working starter build of the Zerobar concept — feed, posts,
-reposts, follows, a library (bookmarks), reels, profiles, and basic
+reposts, follows, a library (bookmarks), 3D Paper mode, profiles, and basic
 auth — wired to a real database (Supabase). It replaces the earlier
 click-through HTML mockup with actual working screens.
 
@@ -50,7 +50,7 @@ Environment Variables, and deploy.
 - Real auth (Supabase Auth — email + password)
 - Real database (Postgres via Supabase, with row-level security policies
   so users can only edit their own data)
-- Feed, Library (bookmarks), Reels, Profile — all reading/writing real rows
+- Feed, Library (bookmarks), Paper Mode, Profile — all reading/writing real rows
 - Posting, reposting, following, bookmarking, reporting a post
 - A basic service worker (`public/sw.js`) so pages you've already opened
   still load with no signal — this is real offline support, not a UI demo
