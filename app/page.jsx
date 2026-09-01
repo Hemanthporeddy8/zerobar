@@ -11,6 +11,8 @@ import ComposeModal from '../components/ComposeModal';
 import SponsoredCard from '../components/SponsoredCard';
 import { getOfflineStash, saveOfflineStash, getOfflineSettings } from '../lib/offlineStorage';
 
+import PaperModeView from '../components/PaperModeView';
+
 // How often a sponsored card appears in the feed — every Nth position.
 const SPONSORED_EVERY = 4;
 
@@ -22,6 +24,7 @@ function FeedInner() {
   const [composeOpen, setComposeOpen] = useState(false);
   const [bookmarkedIds, setBookmarkedIds] = useState(new Set());
   const [followingIds, setFollowingIds] = useState(new Set());
+  const [isPaperMode, setIsPaperMode] = useState(false);
 
   const loadFeed = useCallback(async () => {
     setLoading(true);
@@ -126,21 +129,58 @@ function FeedInner() {
 
   const CATEGORIES = ['All', 'Trending', 'Local', 'Tech', 'Career'];
 
+  if (isPaperMode) {
+    return (
+      <PaperModeView
+        posts={filteredPosts}
+        bookmarkedIds={bookmarkedIds}
+        followingIds={followingIds}
+        onRefresh={loadFeed}
+        onExit={() => setIsPaperMode(false)}
+      />
+    );
+  }
+
   return (
     <>
-      <Header onRefresh={loadFeed} />
+      <Header
+        onRefresh={loadFeed}
+        isPaperMode={isPaperMode}
+        onTogglePaperMode={() => setIsPaperMode(!isPaperMode)}
+      />
 
-      <div style={{ display: 'flex', gap: 8, padding: '14px 18px 6px', overflowX: 'auto' }}>
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`chip ${activeCategory === cat ? 'active' : ''}`}
-            style={{ fontSize: 11.5, padding: '6px 14px' }}
-          >
-            {cat}
-          </button>
-        ))}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px 4px' }}>
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`chip ${activeCategory === cat ? 'active' : ''}`}
+              style={{ fontSize: 11.5, padding: '6px 14px' }}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={() => setIsPaperMode(true)}
+          style={{
+            background: 'rgba(217, 119, 6, 0.15)',
+            border: '1px solid var(--brand-amber)',
+            color: 'var(--brand-gold)',
+            borderRadius: 999,
+            padding: '5px 12px',
+            fontSize: 11,
+            fontWeight: 700,
+            fontFamily: "'IBM Plex Mono', monospace",
+            cursor: 'pointer',
+            flexShrink: 0,
+            marginLeft: 8
+          }}
+        >
+          📰 Paper Mode
+        </button>
       </div>
 
       <div className="section-label">{activeCategory === 'All' ? "Today's feed" : `${activeCategory} stream`}</div>
@@ -169,6 +209,7 @@ function FeedInner() {
     </>
   );
 }
+
 
 
 export default function FeedPage() {
