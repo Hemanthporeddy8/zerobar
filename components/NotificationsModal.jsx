@@ -13,9 +13,9 @@ const INITIAL_NOTIFICATIONS = [
   },
   {
     id: 'notif-2',
-    type: 'reply',
-    title: 'New Comment',
-    message: '@alex_tech replied: "Frequency is noticeable during peak hours today. Good step."',
+    type: 'repost',
+    title: 'New Repost',
+    message: '@alex_tech reposted your story to their followers.',
     time: '25m ago',
     unread: true
   },

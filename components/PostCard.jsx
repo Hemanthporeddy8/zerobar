@@ -14,15 +14,12 @@ export default function PostCard({ post, bookmarked, following, onChange, showFo
   const [likesCount, setLikesCount] = useState(Math.floor((post.id.charCodeAt(0) || 5) % 12) + 2);
   const [dislikesCount, setDislikesCount] = useState(0);
   const [showHeartPop, setShowHeartPop] = useState(false);
-  const [commentsOpen, setCommentsOpen] = useState(false);
-  const [comments, setComments] = useState([]);
-  const [commentText, setCommentText] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [copiedToast, setCopiedToast] = useState(false);
 
   const lastTapRef = useRef(0);
 
-  // Load existing reactions and comments
+  // Load existing reactions
   useEffect(() => {
     async function loadInteractions() {
       try {
@@ -42,17 +39,6 @@ export default function PostCard({ post, bookmarked, following, onChange, showFo
             const myReact = reactData.find((r) => r.user_id === user.id);
             if (myReact) setReaction(myReact.reaction_type);
           }
-        }
-
-        // Load comments count & list
-        const { data: commData } = await supabase
-          .from('comments')
-          .select('*, profiles:user_id ( username, avatar_emoji )')
-          .eq('post_id', post.id)
-          .order('created_at', { ascending: true });
-
-        if (commData) {
-          setComments(commData);
         }
       } catch (err) {
         // Ignore offline errors
@@ -118,44 +104,6 @@ export default function PostCard({ post, bookmarked, following, onChange, showFo
     lastTapRef.current = now;
   }
 
-  // Handle Comments Submit
-  async function submitComment(e) {
-    e.preventDefault();
-    const text = commentText.trim();
-    if (!text || !user) return;
-
-    const newComm = {
-      id: `temp-comm-${Date.now()}`,
-      post_id: post.id,
-      user_id: user.id,
-      content: text,
-      created_at: new Date().toISOString(),
-      profiles: {
-        username: user.user_metadata?.username || user.email?.split('@')[0] || 'You',
-        avatar_emoji: '⚡'
-      }
-    };
-
-    setComments((prev) => [...prev, newComm]);
-    setCommentText('');
-
-    if (!isOnline) {
-      queueOfflineAction({
-        type: 'ADD_COMMENT',
-        payload: { post_id: post.id, user_id: user.id, content: text, authorProfile: newComm.profiles }
-      });
-      return;
-    }
-
-    try {
-      await supabase.from('comments').insert({ post_id: post.id, user_id: user.id, content: text });
-    } catch {
-      queueOfflineAction({
-        type: 'ADD_COMMENT',
-        payload: { post_id: post.id, user_id: user.id, content: text, authorProfile: newComm.profiles }
-      });
-    }
-  }
 
   // Offline Web Speech TTS (Listen button)
   function toggleSpeech() {
@@ -450,18 +398,6 @@ export default function PostCard({ post, bookmarked, following, onChange, showFo
               {dislikesCount > 0 && <span>{dislikesCount}</span>}
             </button>
 
-            {/* Comments Toggle */}
-            <button
-              className={`action-pill ${commentsOpen ? 'active-like' : ''}`}
-              onClick={() => setCommentsOpen(!commentsOpen)}
-              title="Comments & Discussion"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-              <span>{comments.length > 0 ? comments.length : 'Reply'}</span>
-            </button>
-
             {/* Repost */}
             <button className="action-pill" onClick={repost} title="Repost">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -502,48 +438,6 @@ export default function PostCard({ post, bookmarked, following, onChange, showFo
         {copiedToast && (
           <div style={{ marginTop: 8, padding: '4px 10px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: 8, fontSize: 11, color: 'var(--signal-green)', textAlign: 'center', fontFamily: "'IBM Plex Mono', monospace" }}>
             ✓ Link copied to clipboard!
-          </div>
-        )}
-
-        {/* Expandable Comments Drawer */}
-        {commentsOpen && (
-          <div className="comments-tray">
-            <div style={{ maxHeight: 200, overflowY: 'auto' }}>
-              {comments.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', fontSize: 12, margin: '6px 0 10px', fontStyle: 'italic', fontFamily: "'IBM Plex Mono', monospace" }}>
-                  No replies yet. Be the first to share your thoughts.
-                </p>
-              ) : (
-                comments.map((c) => (
-                  <div key={c.id} className="comment-item">
-                    <div style={{ fontSize: 13 }}>{c.profiles?.avatar_emoji || '🧑'}</div>
-                    <div style={{ flex: 1 }}>
-                      <div className="comment-author">
-                        <span>@{c.profiles?.username || 'user'}</span>
-                        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: "'IBM Plex Mono', monospace" }}>
-                          · {new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      <div className="comment-content">{c.content}</div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Quick Comment Input */}
-            <form onSubmit={submitComment} className="comment-form">
-              <input
-                type="text"
-                className="comment-input"
-                placeholder={isOnline ? "Write a quick reply…" : "Reply (Queued offline)…"}
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-              />
-              <button type="submit" className="comment-submit-btn" disabled={!commentText.trim()}>
-                Reply
-              </button>
-            </form>
           </div>
         )}
       </div>
