@@ -880,6 +880,132 @@ button {
   cursor: pointer;
 }
 
+/* ========== Flip-Book Styles ========== */
+
+.fb-scene {
+  perspective: 2200px;
+  width: 100%;
+  max-width: 480px;
+  height: calc(100vh - 240px);
+  min-height: 420px;
+  max-height: 680px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.fb-book {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+  border-radius: 4px;
+}
+
+.fb-base {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, #6b4a2b, #4a3220);
+  border-radius: 4px;
+  box-shadow: inset -8px 0 20px rgba(0,0,0,0.35);
+}
+
+.fb-spine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 18px;
+  background: linear-gradient(90deg, #3a2818, #5a3d24);
+  border-radius: 4px 0 0 4px;
+  z-index: 5;
+}
+
+/* ── individual page (one physical sheet) ── */
+.fb-page {
+  position: absolute;
+  top: 0;
+  left: 18px;
+  width: calc(100% - 18px);
+  height: 100%;
+  transform-style: preserve-3d;
+  transform-origin: left center;
+  transition: transform 1s cubic-bezier(.65, .05, .36, 1);
+}
+
+.fb-flipped {
+  transform: rotateY(-180deg);
+}
+
+/* ── page faces ── */
+.fb-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 0 6px 6px 0;
+  overflow: hidden;
+  background: var(--paper, #fdfaf3);
+}
+
+.fb-front {
+  box-shadow: 0 0 12px rgba(0,0,0,0.10) inset, 2px 0 6px rgba(0,0,0,0.12);
+}
+
+.fb-back {
+  transform: rotateY(180deg);
+  background: #f6f0e2;
+  box-shadow: 0 0 12px rgba(0,0,0,0.10) inset, -2px 0 6px rgba(0,0,0,0.12);
+}
+
+.fb-face-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* shadow flare while page is mid-flip */
+.fb-page:not(.fb-flipped):hover .fb-front {
+  box-shadow: 0 0 18px rgba(0,0,0,0.18) inset, 4px 0 14px rgba(0,0,0,0.22);
+}
+
+/* page number badge */
+.fb-page-num {
+  position: absolute;
+  bottom: 12px;
+  font-size: 11px;
+  color: #a09585;
+  font-family: 'IBM Plex Mono', monospace;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ── controls ── */
+.fb-btn {
+  background: #8b5e34 !important;
+  color: #fdfaf3 !important;
+  border: none !important;
+  padding: 10px 24px !important;
+  font-size: 15px !important;
+  font-family: Georgia, 'Times New Roman', serif !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+  transition: transform 0.15s ease, background 0.2s ease !important;
+}
+
+.fb-btn:hover:not(:disabled) {
+  background: #a5713e !important;
+  transform: translateY(-2px);
+}
+
+.fb-btn:disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -889,5 +1015,4 @@ button {
   from { transform: translateY(30px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
-
 

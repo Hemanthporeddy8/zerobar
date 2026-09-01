@@ -1,96 +1,104 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import PostCard from './PostCard';
 
+/* ── Offline Web Audio API: synthetic paper-flip rustle ── */
+function playPaperSound() {
+  if (typeof window === 'undefined') return;
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const len = ctx.sampleRate * 0.14; // 140 ms
+    const buffer = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.22));
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 1400;
+    bp.Q.value = 0.9;
+
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.22, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.14);
+
+    src.connect(bp);
+    bp.connect(g);
+    g.connect(ctx.destination);
+    src.start();
+  } catch {
+    /* ignore */
+  }
+}
+
 export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRefresh, onExit }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [touchStartX, setTouchStartX] = useState(null);
-  const [touchDeltaX, setTouchDeltaX] = useState(0);
-  const [isFlipping, setIsFlipping] = useState(false);
-  const [flipDirection, setFlipDirection] = useState('next');
+  const [currentFlip, setCurrentFlip] = useState(0);
+  const [flippedSet, setFlippedSet] = useState(new Set());
+  const [isAnimating, setIsAnimating] = useState(false);
+  const touchStartX = useRef(null);
 
-  const totalPages = posts.length || 1;
-  const currentPost = posts[currentIndex];
+  const totalSheets = posts.length;
 
-  // Keyboard navigation
+  /* ── Flip helpers ── */
+  const flipNext = useCallback(() => {
+    if (currentFlip >= totalSheets || isAnimating) return;
+    setIsAnimating(true);
+    playPaperSound();
+    setFlippedSet(prev => new Set(prev).add(currentFlip));
+    setCurrentFlip(prev => prev + 1);
+    setTimeout(() => setIsAnimating(false), 900);
+  }, [currentFlip, totalSheets, isAnimating]);
+
+  const flipPrev = useCallback(() => {
+    if (currentFlip <= 0 || isAnimating) return;
+    setIsAnimating(true);
+    playPaperSound();
+    const idx = currentFlip - 1;
+    setFlippedSet(prev => {
+      const s = new Set(prev);
+      s.delete(idx);
+      return s;
+    });
+    setCurrentFlip(prev => prev - 1);
+    setTimeout(() => setIsAnimating(false), 900);
+  }, [currentFlip, isAnimating]);
+
+  /* ── Keyboard ── */
   useEffect(() => {
-    function handleKeyDown(e) {
-      if (e.key === 'ArrowRight' || e.key === ' ') {
-        nextPage();
-      } else if (e.key === 'ArrowLeft') {
-        prevPage();
+    function onKey(e) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+        e.preventDefault();
+        flipNext();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        flipPrev();
       }
     }
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, totalPages]);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [flipNext, flipPrev]);
 
-  function nextPage() {
-    if (currentIndex < totalPages - 1) {
-      setFlipDirection('next');
-      setIsFlipping(true);
-      setTimeout(() => {
-        setCurrentIndex((i) => i + 1);
-        setIsFlipping(false);
-      }, 200);
-    }
-  }
-
-  function prevPage() {
-    if (currentIndex > 0) {
-      setFlipDirection('prev');
-      setIsFlipping(true);
-      setTimeout(() => {
-        setCurrentIndex((i) => i - 1);
-        setIsFlipping(false);
-      }, 200);
-    }
-  }
-
-  // Touch gesture handlers
+  /* ── Touch swipe ── */
   function handleTouchStart(e) {
-    setTouchStartX(e.touches[0].clientX);
-    setTouchDeltaX(0);
+    touchStartX.current = e.touches[0].clientX;
   }
-
-  function handleTouchMove(e) {
-    if (touchStartX === null) return;
-    const delta = e.touches[0].clientX - touchStartX;
-    setTouchDeltaX(delta);
-  }
-
-  function handleTouchEnd() {
-    if (touchStartX === null) return;
-    const SWIPE_THRESHOLD = 50;
-    if (touchDeltaX < -SWIPE_THRESHOLD) {
-      nextPage();
-    } else if (touchDeltaX > SWIPE_THRESHOLD) {
-      prevPage();
+  function handleTouchEnd(e) {
+    if (touchStartX.current === null) return;
+    const dx = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 50) {
+      dx > 0 ? flipNext() : flipPrev();
     }
-    setTouchStartX(null);
-    setTouchDeltaX(0);
+    touchStartX.current = null;
   }
 
-  // Mouse Drag handlers for desktop
-  const [mouseStartX, setMouseStartX] = useState(null);
-
-  function handleMouseDown(e) {
-    setMouseStartX(e.clientX);
-  }
-
-  function handleMouseUp(e) {
-    if (mouseStartX === null) return;
-    const delta = e.clientX - mouseStartX;
-    if (delta < -50) {
-      nextPage();
-    } else if (delta > 50) {
-      prevPage();
-    }
-    setMouseStartX(null);
-  }
-
-  if (!currentPost) {
+  /* ── Empty state ── */
+  if (!posts || posts.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 20px', color: '#5B4E3E', background: '#F8F5EE', minHeight: '80vh' }}>
         <h2>The Zerobar Gazette</h2>
@@ -102,36 +110,44 @@ export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRe
     );
   }
 
+  const pageLabel =
+    currentFlip === 0
+      ? 'Cover'
+      : currentFlip === totalSheets
+        ? 'The End'
+        : `Page ${currentFlip} of ${totalSheets}`;
+
   return (
     <div
       className="paper-mode-wrap"
       onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
       style={{
-        background: '#F8F5EE',
+        background: 'radial-gradient(ellipse at center, #3a3128 0%, #1c1712 100%)',
         color: '#1B1917',
         minHeight: '100vh',
-        padding: '16px 18px 90px',
+        padding: '14px 12px 60px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
         position: 'relative',
-        userSelect: 'none'
+        userSelect: 'none',
+        overflow: 'hidden'
       }}
     >
-      {/* Newspaper Masthead */}
-      <div style={{ textAlign: 'center', borderBottom: '3px double #1B1917', paddingBottom: 10, marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", color: '#6A5F50', marginBottom: 4 }}>
+      {/* ── Newspaper Masthead ── */}
+      <div style={{ textAlign: 'center', width: '100%', maxWidth: 520, marginBottom: 12, flexShrink: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", color: '#cbbfa8', marginBottom: 4 }}>
           <span>VOL. I · NO. 26</span>
-          <span style={{ fontWeight: 700, color: '#D97706', textTransform: 'uppercase' }}>📰 Paper Broadside</span>
+          <span style={{ fontWeight: 700, color: '#D97706', textTransform: 'uppercase' }}>📰 Flip Book Edition</span>
           <button
             onClick={onExit}
             style={{
-              background: '#1B1917',
-              color: '#F8F5EE',
+              background: '#fdfaf3',
+              color: '#1B1917',
               border: 'none',
               borderRadius: 999,
-              padding: '3px 10px',
+              padding: '4px 12px',
               fontSize: 10.5,
               fontWeight: 700,
               cursor: 'pointer'
@@ -141,94 +157,103 @@ export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRe
           </button>
         </div>
 
-        <h1 style={{ fontFamily: "'Newsreader', Georgia, serif", fontSize: 30, margin: '2px 0 6px', fontWeight: 900, letterSpacing: '-0.03em', textTransform: 'uppercase' }}>
+        <h1 style={{
+          fontFamily: "'Newsreader', Georgia, serif",
+          fontSize: 28,
+          margin: '2px 0 6px',
+          fontWeight: 900,
+          letterSpacing: '-0.03em',
+          textTransform: 'uppercase',
+          color: '#fdfaf3'
+        }}>
           The Zerobar Gazette
         </h1>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #1B1917', borderBottom: '1px solid #1B1917', padding: '3px 0', fontSize: 10.5, fontFamily: "'IBM Plex Mono', monospace", color: '#4A4035' }}>
-          <span>OFFLINE EDITION</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #6A5F50', borderBottom: '1px solid #6A5F50', padding: '3px 0', fontSize: 10.5, fontFamily: "'IBM Plex Mono', monospace", color: '#8A7D6B' }}>
+          <span>FLIP BOOK EDITION</span>
           <span>{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</span>
-          <span>ZERO SIGNAL VERIFIED</span>
+          <span>SWIPE TO TURN</span>
         </div>
       </div>
 
-      {/* Flip Progress & Navigation Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+      {/* ── Flip-Book Scene ── */}
+      <div className="fb-scene">
+        <div className="fb-book">
+          <div className="fb-spine" />
+          <div className="fb-base" />
+
+          {posts.map((post, i) => {
+            const isFlipped = flippedSet.has(i);
+            return (
+              <div
+                key={post.id || i}
+                className={`fb-page${isFlipped ? ' fb-flipped' : ''}`}
+                style={{ zIndex: isFlipped ? totalSheets + i : totalSheets - i }}
+              >
+                {/* Front face — PostCard */}
+                <div className="fb-face fb-front">
+                  <div className="fb-face-scroll">
+                    <PostCard
+                      post={post}
+                      bookmarked={bookmarkedIds.has(post.id)}
+                      following={followingIds.has(post.user_id)}
+                      onChange={onRefresh}
+                    />
+                  </div>
+                  <div className="fb-page-num" style={{ right: 16 }}>{i + 1}</div>
+                </div>
+
+                {/* Back face — decorative ruled paper */}
+                <div className="fb-face fb-back">
+                  <div style={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#a09585',
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontSize: 13,
+                    background: 'repeating-linear-gradient(0deg, transparent, transparent 27px, #e8e0d0 27px, #e8e0d0 28px)',
+                    padding: 30
+                  }}>
+                    <div style={{ fontSize: 44, marginBottom: 14, opacity: 0.25 }}>📰</div>
+                    <span style={{ fontStyle: 'italic' }}>Turn to continue reading…</span>
+                  </div>
+                  <div className="fb-page-num" style={{ left: 16 }}>{i + 1}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Controls ── */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 20, flexShrink: 0 }}>
         <button
-          onClick={prevPage}
-          disabled={currentIndex === 0}
-          style={{
-            background: currentIndex === 0 ? 'rgba(0,0,0,0.04)' : '#EBE4D5',
-            border: '1px solid #D6CCB8',
-            color: currentIndex === 0 ? '#A89E8D' : '#1B1917',
-            padding: '6px 14px',
-            borderRadius: 8,
-            fontSize: 12,
-            fontFamily: "'IBM Plex Mono', monospace",
-            cursor: currentIndex === 0 ? 'default' : 'pointer',
-            fontWeight: 600
-          }}
+          onClick={flipPrev}
+          disabled={currentFlip === 0 || isAnimating}
+          className="fb-btn"
         >
           ← Prev
         </button>
-
-        <span style={{ fontSize: 12, fontFamily: "'IBM Plex Mono', monospace", color: '#6A5F50', fontWeight: 600 }}>
-          Story {currentIndex + 1} of {totalPages}
-        </span>
-
         <button
-          onClick={nextPage}
-          disabled={currentIndex === totalPages - 1}
-          style={{
-            background: currentIndex === totalPages - 1 ? 'rgba(0,0,0,0.04)' : '#EBE4D5',
-            border: '1px solid #D6CCB8',
-            color: currentIndex === totalPages - 1 ? '#A89E8D' : '#1B1917',
-            padding: '6px 14px',
-            borderRadius: 8,
-            fontSize: 12,
-            fontFamily: "'IBM Plex Mono', monospace",
-            cursor: currentIndex === totalPages - 1 ? 'default' : 'pointer',
-            fontWeight: 600
-          }}
+          onClick={flipNext}
+          disabled={currentFlip === totalSheets || isAnimating}
+          className="fb-btn"
         >
           Next →
         </button>
       </div>
 
-      {/* Active Story Page with Paper Flip Animation */}
-      <div
-        style={{
-          transition: 'transform 0.22s ease, opacity 0.22s ease',
-          transform: isFlipping
-            ? flipDirection === 'next'
-              ? 'translateX(-40px) rotateY(-8deg)'
-              : 'translateX(40px) rotateY(8deg)'
-            : 'translateX(0) rotateY(0)',
-          opacity: isFlipping ? 0.4 : 1
-        }}
-      >
-        <div
-          style={{
-            background: '#FFFDF9',
-            border: '1px solid #E0D7C5',
-            borderRadius: 18,
-            boxShadow: '0 8px 30px rgba(74, 64, 53, 0.12)',
-            overflow: 'hidden'
-          }}
-        >
-          <PostCard
-            key={currentPost.id}
-            post={currentPost}
-            bookmarked={bookmarkedIds.has(currentPost.id)}
-            following={followingIds.has(currentPost.user_id)}
-            onChange={onRefresh}
-          />
-        </div>
+      {/* ── Page counter ── */}
+      <div style={{ textAlign: 'center', marginTop: 10, color: '#cbbfa8', fontSize: 13, letterSpacing: 1, fontFamily: "'IBM Plex Mono', monospace" }}>
+        {pageLabel}
       </div>
 
-      {/* Tactile gesture hint */}
-      <div style={{ textAlign: 'center', marginTop: 20, color: '#8A7D6B', fontSize: 11.5, fontFamily: "'IBM Plex Mono', monospace" }}>
-        <span>👆 Swipe left/right or press <b>[←] [→]</b> keys to turn pages</span>
+      {/* ── Hint ── */}
+      <div style={{ textAlign: 'center', marginTop: 8, color: '#6A5F50', fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}>
+        👆 Swipe left / right or press <b>[←] [→]</b> keys to turn pages
       </div>
     </div>
   );
