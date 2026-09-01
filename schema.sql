@@ -138,5 +138,62 @@ create policy "Users can file reports"
   on public.reports for insert
   with check (auth.uid() = reporter_id);
 
--- No select policy is created on purpose: reports are only readable via the
--- Supabase dashboard (service role) until you build a real admin/moderation view.
+create policy "Reports are readable by authenticated users"
+  on public.reports for select
+  using (auth.role() = 'authenticated');
+
+create policy "Reports can be deleted by authenticated users"
+  on public.reports for delete
+  using (auth.role() = 'authenticated');
+
+-- ---------- POST REACTIONS (Likes & Dislikes) ----------
+create table if not exists public.post_reactions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  post_id uuid not null references public.posts(id) on delete cascade,
+  reaction_type text not null check (reaction_type in ('like', 'dislike')),
+  created_at timestamptz default now(),
+  unique (user_id, post_id)
+);
+
+alter table public.post_reactions enable row level security;
+
+create policy "Reactions are publicly readable"
+  on public.post_reactions for select
+  using (true);
+
+create policy "Users can react as themselves"
+  on public.post_reactions for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update their reaction"
+  on public.post_reactions for update
+  using (auth.uid() = user_id);
+
+create policy "Users can remove their reaction"
+  on public.post_reactions for delete
+  using (auth.uid() = user_id);
+
+-- ---------- COMMENTS ----------
+create table if not exists public.comments (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  post_id uuid not null references public.posts(id) on delete cascade,
+  content text not null,
+  created_at timestamptz default now()
+);
+
+alter table public.comments enable row level security;
+
+create policy "Comments are publicly readable"
+  on public.comments for select
+  using (true);
+
+create policy "Users can post comments"
+  on public.comments for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can delete their own comments"
+  on public.comments for delete
+  using (auth.uid() = user_id);
+
