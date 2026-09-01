@@ -66,40 +66,40 @@ export default function StashModal({ onClose, onStashed }) {
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal" style={{ maxHeight: '85vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h3 style={{ margin: 0, fontSize: 17 }}>📦 Stash Feed for Offline</h3>
+          <h3 style={{ margin: 0, fontSize: 18, letterSpacing: '-0.02em' }}>📦 Stash Feed for Offline</h3>
           <button className="icon-btn" onClick={onClose}>
             ✕
           </button>
         </div>
 
-        <p style={{ color: 'var(--mist)', fontSize: 13, margin: '0 0 16px', lineHeight: 1.4 }}>
-          Download your feed before getting on a <b>flight, subway, or train</b>. Read and scroll seamlessly with <b>zero signal</b>.
+        <p style={{ color: 'var(--text-secondary)', fontSize: 13.5, margin: '0 0 18px', lineHeight: 1.5 }}>
+          Pre-load your feed before getting on a <b>flight, subway, or train</b>. Read and scroll with <b>zero signal</b>.
         </p>
 
         {stashedSummary ? (
-          <div style={{ background: 'rgba(74, 222, 128, 0.1)', border: '1px solid var(--green)', padding: 14, borderRadius: 14, marginBottom: 16 }}>
-            <p style={{ color: 'var(--green)', fontWeight: 600, fontSize: 14, margin: '0 0 6px' }}>
-              ✓ Feed Stashed for Offline
+          <div style={{ background: 'rgba(16, 185, 129, 0.12)', border: '1px solid rgba(16, 185, 129, 0.35)', padding: 16, borderRadius: 16, marginBottom: 16 }}>
+            <p style={{ color: 'var(--signal-green)', fontWeight: 700, fontSize: 15, margin: '0 0 6px' }}>
+              ✓ Feed Stashed Successfully
             </p>
-            <p style={{ fontSize: 12.5, color: 'var(--paper)', margin: 0, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <p style={{ fontSize: 13, color: 'var(--text-primary)', margin: 0, fontFamily: "'IBM Plex Mono', monospace" }}>
               {stashedSummary.totalPosts} posts stashed · {stashedSummary.sizeFormatted} used (budget: {stashedSummary.budgetMB} MB)
             </p>
             <button
               className="btn btn-primary"
               onClick={onClose}
-              style={{ width: '100%', marginTop: 14, padding: 10 }}
+              style={{ width: '100%', marginTop: 16, padding: 11 }}
             >
               Done
             </button>
           </div>
         ) : (
           <>
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ display: 'block', fontSize: 11, color: 'var(--mist)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'IBM Plex Mono', monospace", marginBottom: 8 }}>
-                ⚡ Data Saver Budget (Max Download Size)
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', fontSize: 11.5, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: "'IBM Plex Mono', monospace", marginBottom: 10 }}>
+                ⚡ Data Saver Budget Cap
               </label>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
                 {DATA_SAVER_PRESETS.map((preset) => (
                   <div
                     key={preset.id}
@@ -108,17 +108,18 @@ export default function StashModal({ onClose, onStashed }) {
                       setIsCustom(false);
                     }}
                     style={{
-                      padding: '10px 12px',
-                      borderRadius: 12,
+                      padding: '12px',
+                      borderRadius: 14,
                       cursor: 'pointer',
-                      border: !isCustom && selectedMB === preset.mb ? '1.5px solid var(--amber)' : '1px solid var(--line)',
-                      background: !isCustom && selectedMB === preset.mb ? 'rgba(255, 178, 56, 0.12)' : 'var(--ink)'
+                      border: !isCustom && selectedMB === preset.mb ? '1.5px solid var(--brand-amber)' : '1px solid var(--border-card)',
+                      background: !isCustom && selectedMB === preset.mb ? 'rgba(245, 158, 11, 0.12)' : 'var(--bg-base)',
+                      transition: 'all 0.15s ease'
                     }}
                   >
-                    <div style={{ fontWeight: 600, fontSize: 13, color: !isCustom && selectedMB === preset.mb ? 'var(--amber)' : 'var(--paper)' }}>
+                    <div style={{ fontWeight: 700, fontSize: 13.5, color: !isCustom && selectedMB === preset.mb ? 'var(--brand-gold)' : 'var(--text-primary)' }}>
                       {preset.label}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--mist-dim)', marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>
                       {preset.desc}
                     </div>
                   </div>
@@ -128,17 +129,17 @@ export default function StashModal({ onClose, onStashed }) {
               <div
                 onClick={() => setIsCustom(true)}
                 style={{
-                  padding: '8px 12px',
-                  borderRadius: 12,
-                  border: isCustom ? '1.5px solid var(--amber)' : '1px solid var(--line)',
-                  background: isCustom ? 'rgba(255, 178, 56, 0.12)' : 'var(--ink)',
+                  padding: '10px 14px',
+                  borderRadius: 14,
+                  border: isCustom ? '1.5px solid var(--brand-amber)' : '1px solid var(--border-card)',
+                  background: isCustom ? 'rgba(245, 158, 11, 0.12)' : 'var(--bg-base)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
                   cursor: 'pointer'
                 }}
               >
-                <span style={{ fontSize: 12.5, color: isCustom ? 'var(--amber)' : 'var(--mist)' }}>
+                <span style={{ fontSize: 13, color: isCustom ? 'var(--brand-gold)' : 'var(--text-secondary)', fontWeight: 500 }}>
                   Custom Limit:
                 </span>
                 <input
@@ -152,33 +153,33 @@ export default function StashModal({ onClose, onStashed }) {
                     setIsCustom(true);
                   }}
                   style={{
-                    width: 70,
-                    padding: '4px 8px',
+                    width: 76,
+                    padding: '6px 10px',
                     borderRadius: 8,
-                    background: 'var(--indigo-2)',
-                    border: '1px solid var(--line)',
-                    color: 'var(--paper)',
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border-card)',
+                    color: 'var(--text-primary)',
                     fontSize: 13,
                     fontFamily: "'IBM Plex Mono', monospace"
                   }}
                 />
-                <span style={{ fontSize: 12, color: 'var(--mist-dim)' }}>MB</span>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>MB</span>
               </div>
             </div>
 
-            <div style={{ background: 'var(--ink)', padding: '10px 14px', borderRadius: 12, border: '1px solid var(--line)', marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--mist)' }}>
-                <span>Budget Cap:</span>
-                <span style={{ color: 'var(--amber)' }}>{activeMB} MB</span>
+            <div style={{ background: 'var(--bg-base)', padding: '12px 16px', borderRadius: 14, border: '1px solid var(--border-card)', marginBottom: 18 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--text-secondary)' }}>
+                <span>Budget Limit:</span>
+                <span style={{ color: 'var(--brand-gold)', fontWeight: 700 }}>{activeMB} MB</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--mist)', marginTop: 4 }}>
-                <span>Est. Offline Stories:</span>
-                <span style={{ color: 'var(--paper)' }}>~{Math.round(activeMB * 25)} posts</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--text-secondary)', marginTop: 6 }}>
+                <span>Estimated Feed Items:</span>
+                <span style={{ color: 'var(--text-primary)' }}>~{Math.round(activeMB * 25)} posts + reels</span>
               </div>
             </div>
 
             {downloading && (
-              <p style={{ textAlign: 'center', color: 'var(--amber)', fontSize: 12.5, fontFamily: "'IBM Plex Mono', monospace", margin: '10px 0' }}>
+              <p style={{ textAlign: 'center', color: 'var(--brand-amber)', fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", margin: '12px 0' }}>
                 ⏳ {progressText}
               </p>
             )}
@@ -197,3 +198,4 @@ export default function StashModal({ onClose, onStashed }) {
     </div>
   );
 }
+

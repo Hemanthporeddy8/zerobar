@@ -107,10 +107,16 @@ function FeedInner() {
     };
   }, [loadFeed]);
 
+  const [activeCategory, setActiveCategory] = useState('All');
+
   // Interleave sponsored cards into the feed every SPONSORED_EVERY posts.
+  const filteredPosts = activeCategory === 'All'
+    ? posts
+    : posts.filter((p) => (p.category || 'Trending').toLowerCase() === activeCategory.toLowerCase());
+
   const items = [];
   let sponsoredIndex = 0;
-  posts.forEach((p, i) => {
+  filteredPosts.forEach((p, i) => {
     items.push({ type: 'post', data: p });
     if ((i + 1) % SPONSORED_EVERY === 0 && sponsoredIndex < sponsored.length) {
       items.push({ type: 'sponsored', data: sponsored[sponsoredIndex] });
@@ -118,13 +124,29 @@ function FeedInner() {
     }
   });
 
+  const CATEGORIES = ['All', 'Trending', 'Local', 'Tech', 'Career'];
+
   return (
     <>
       <Header onRefresh={loadFeed} />
-      <div className="section-label">Today's feed</div>
-      {loading && <p className="empty-note">Loading…</p>}
-      {!loading && posts.length === 0 && (
-        <p className="empty-note">No posts yet — tap + and be the first.</p>
+
+      <div style={{ display: 'flex', gap: 8, padding: '14px 18px 6px', overflowX: 'auto' }}>
+        {CATEGORIES.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`chip ${activeCategory === cat ? 'active' : ''}`}
+            style={{ fontSize: 11.5, padding: '6px 14px' }}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      <div className="section-label">{activeCategory === 'All' ? "Today's feed" : `${activeCategory} stream`}</div>
+      {loading && <p className="empty-note">Loading stream…</p>}
+      {!loading && filteredPosts.length === 0 && (
+        <p className="empty-note">No posts in this stream yet — tap + to publish.</p>
       )}
       {items.map((item) =>
         item.type === 'sponsored' ? (
@@ -139,7 +161,7 @@ function FeedInner() {
           />
         )
       )}
-      <button className="fab" onClick={() => setComposeOpen(true)}>
+      <button className="fab" onClick={() => setComposeOpen(true)} title="New Post">
         +
       </button>
       {composeOpen && <ComposeModal onClose={() => setComposeOpen(false)} onPosted={loadFeed} />}
@@ -147,6 +169,7 @@ function FeedInner() {
     </>
   );
 }
+
 
 export default function FeedPage() {
   return (

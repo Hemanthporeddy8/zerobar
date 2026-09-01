@@ -146,8 +146,14 @@ export default function PostCard({ post, bookmarked, following, onChange, showFo
 
   return (
     <div className="card">
-      <div className="card-media" style={isImage ? { height: 180, background: '#0D1122' } : {}}>
-        <span className="kind">{post.kind}</span>
+      <div className="card-media" style={isImage ? { height: 190, background: '#090B14' } : {}}>
+        <div style={{ position: 'absolute', top: 12, left: 12, right: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 3 }}>
+          <span className="kind">{post.kind}</span>
+          <span style={{ fontSize: 10, fontFamily: "'IBM Plex Mono', monospace", background: 'rgba(9,11,20,0.8)', backdropFilter: 'blur(8px)', color: 'var(--brand-gold)', padding: '3px 8px', borderRadius: 6, border: '1px solid var(--border-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>
+            {post.category || 'Trending'}
+          </span>
+        </div>
+
         {isImage ? (
           <img
             src={mediaSrc}
@@ -156,38 +162,61 @@ export default function PostCard({ post, bookmarked, following, onChange, showFo
             loading="lazy"
           />
         ) : (
-          post.media_emoji || '📰'
+          <span style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }}>
+            {post.media_emoji || '⚡'}
+          </span>
         )}
       </div>
 
       <div className="card-body">
         <div className="author-row">
           <span className="a-avatar">{authorEmoji}</span>
-          <span className="a-name">
-            {authorName} {post._isOptimistic && <span style={{ color: 'var(--amber)', fontSize: 10 }}>[Queued offline]</span>}
-          </span>
+          <div className="a-name">
+            <span>{authorName}</span>
+            {post._isOptimistic && (
+              <span style={{ color: 'var(--brand-amber)', fontSize: 10.5, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 500 }}>
+                [Offline Outbox]
+              </span>
+            )}
+          </div>
           {showFollow && !isOwn && (
             <button className={`follow-btn ${following ? 'following' : ''}`} onClick={toggleFollow}>
-              {following ? 'Following' : 'Follow'}
+              {following ? 'Following' : '+ Follow'}
             </button>
           )}
         </div>
+
         <p className="card-title">{post.title}</p>
+
         <div className="card-meta">
           <span className="src">
-            {post.is_repost ? '🔁 Reposted' : new Date(post.created_at).toLocaleDateString()}
+            {post.is_repost ? '🔁 Reposted' : new Date(post.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
           </span>
+
           <div className="meta-actions">
             {!isOwn && (
-              <button className="icon-btn" onClick={report} title="Report">
-                🚩
+              <button className="icon-btn" onClick={report} title="Report post">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                  <line x1="4" x2="4" y1="22" y2="15" />
+                </svg>
               </button>
             )}
-            <button className="icon-btn" onClick={repost} title="Repost">
-              ♻
+
+            <button className="icon-btn" onClick={repost} title="Repost to feed">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m17 2 4 4-4 4" />
+                <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
+                <path d="m7 22-4-4 4-4" />
+                <path d="M21 13v1a4 4 0 0 1-4 4H3" />
+              </svg>
             </button>
+
             <button className={`dl-btn ${bookmarked ? 'saved' : ''}`} onClick={toggleBookmark}>
-              {bookmarked ? '✓ Added' : '🔖 Add'}
+              <svg width="13" height="13" viewBox="0 0 24 24" fill={bookmarked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+              </svg>
+              {bookmarked ? 'Saved' : 'Bookmark'}
             </button>
           </div>
         </div>
@@ -195,3 +224,4 @@ export default function PostCard({ post, bookmarked, following, onChange, showFo
     </div>
   );
 }
+

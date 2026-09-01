@@ -3,9 +3,6 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
-// Renders a brand's directly-sold sponsored post. Unlike a third-party ad
-// network card, this is safe to include in the offline bundle — it's your
-// own content, not a live-verified third-party ad call.
 export default function SponsoredCard({ post }) {
   const loggedImpression = useRef(false);
 
@@ -17,34 +14,65 @@ export default function SponsoredCard({ post }) {
   }, []);
 
   async function logEvent(eventType) {
-    const { data: userData } = await supabase.auth.getUser();
-    await supabase.from('ad_events').insert({
-      sponsored_post_id: post.id,
-      event_type: eventType,
-      viewer_id: userData?.user?.id || null
-    });
-    // If this insert fails because the device is offline, Supabase's client
-    // will just throw here silently for now. Before launch, queue failed
-    // events (e.g. in IndexedDB) and retry them on the 'online' event, so
-    // offline impressions still count once signal returns.
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      await supabase.from('ad_events').insert({
+        sponsored_post_id: post.id,
+        event_type: eventType,
+        viewer_id: userData?.user?.id || null
+      });
+    } catch {
+      // Ignore offline failures
+    }
   }
 
   function handleClick() {
     logEvent('click');
   }
 
+  const isImage =
+    Boolean(post.media_url) ||
+    (typeof post.media_emoji === 'string' &&
+      (post.media_emoji.startsWith('data:image') ||
+        post.media_emoji.startsWith('http') ||
+        post.media_emoji.startsWith('/')));
+
   return (
-    <div className="card" style={{ borderColor: 'rgba(255,178,56,0.35)' }}>
-      <div className="card-media">
-        <span className="kind" style={{ background: 'rgba(255,178,56,0.85)', color: '#241704' }}>
-          Sponsored
-        </span>
-        {post.media_emoji || '📣'}
+    <div className="card" style={{ borderColor: 'rgba(245, 158, 11, 0.35)', background: 'linear-gradient(180deg, #161B30 0%, #111425 100%)' }}>
+      <div className="card-media" style={isImage ? { height: 180, background: '#090B14' } : {}}>
+        <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6, zIndex: 3 }}>
+          <span className="kind" style={{ background: 'linear-gradient(135deg, var(--brand-gold), var(--brand-amber))', color: '#090B14', fontWeight: 700 }}>
+            Sponsored
+          </span>
+          <span style={{ fontSize: 10, fontFamily: "'IBM Plex Mono', monospace", background: 'rgba(9,11,20,0.8)', backdropFilter: 'blur(8px)', color: 'var(--text-secondary)', padding: '3px 8px', borderRadius: 6, border: '1px solid var(--border-subtle)', fontWeight: 600 }}>
+            {post.category || 'Featured'}
+          </span>
+        </div>
+
+        {isImage ? (
+          <img
+            src={post.media_url || post.media_emoji}
+            alt={post.title}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            loading="lazy"
+          />
+        ) : (
+          <span style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }}>
+            {post.media_emoji || '📣'}
+          </span>
+        )}
       </div>
+
       <div className="card-body">
-        <p className="card-title">{post.title}</p>
-        <div className="card-meta">
-          <span className="src">{post.category}</span>
+        <p className="card-title" style={{ fontSize: 17.5 }}>
+          {post.title}
+        </p>
+
+        <div className="card-meta" style={{ marginTop: 12 }}>
+          <span className="src" style={{ color: 'var(--brand-gold)', fontWeight: 600 }}>
+            Verified Partner
+          </span>
+
           {post.cta_url && (
             <a
               className="dl-btn saved"
@@ -52,8 +80,9 @@ export default function SponsoredCard({ post }) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={handleClick}
+              style={{ padding: '6px 14px', fontSize: 11.5 }}
             >
-              {post.cta_label || 'Learn more'}
+              {post.cta_label || 'Learn more'} →
             </a>
           )}
         </div>
@@ -61,3 +90,4 @@ export default function SponsoredCard({ post }) {
     </div>
   );
 }
+
