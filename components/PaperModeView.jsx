@@ -211,7 +211,7 @@ export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRe
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       style={{
-        background: 'radial-gradient(ellipse at center, #3a3128 0%, #1c1712 100%)',
+        background: '#F8F5EE',
         color: '#1B1917',
         minHeight: '100vh',
         padding: '14px 12px 60px',
@@ -225,20 +225,21 @@ export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRe
     >
       {/* ── Newspaper Masthead ── */}
       <div style={{ textAlign: 'center', width: '100%', maxWidth: 520, marginBottom: 12, flexShrink: 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", color: '#cbbfa8', marginBottom: 4 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", color: '#6B5E4F', marginBottom: 4 }}>
           <span>VOL. I · NO. 26</span>
-          <span style={{ fontWeight: 700, color: '#D97706', textTransform: 'uppercase' }}>📰 Flip Book Edition</span>
+          <span style={{ fontWeight: 700, color: '#B45309', textTransform: 'uppercase' }}>📰 Paper Broadside</span>
           <button
             onClick={onExit}
             style={{
-              background: '#fdfaf3',
-              color: '#1B1917',
+              background: '#1B1917',
+              color: '#FFFDF9',
               border: 'none',
               borderRadius: 999,
               padding: '4px 12px',
               fontSize: 10.5,
               fontWeight: 700,
-              cursor: 'pointer'
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
             }}
           >
             ✕ Exit
@@ -247,18 +248,18 @@ export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRe
 
         <h1 style={{
           fontFamily: "'Newsreader', Georgia, serif",
-          fontSize: 28,
+          fontSize: 29,
           margin: '2px 0 6px',
           fontWeight: 900,
           letterSpacing: '-0.03em',
           textTransform: 'uppercase',
-          color: '#fdfaf3'
+          color: '#1B1917'
         }}>
           The Zerobar Gazette
         </h1>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #6A5F50', borderBottom: '1px solid #6A5F50', padding: '3px 0', fontSize: 10.5, fontFamily: "'IBM Plex Mono', monospace", color: '#8A7D6B' }}>
-          <span>FLIP BOOK EDITION</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #1B1917', borderBottom: '1px solid #1B1917', padding: '3px 0', fontSize: 10.5, fontFamily: "'IBM Plex Mono', monospace", color: '#5B4E3E' }}>
+          <span>OFFLINE BROADSIDE</span>
           <span>{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</span>
           <span>DRAG CORNER TO TURN</span>
         </div>
@@ -333,7 +334,7 @@ export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRe
       </div>
 
       {/* ── Hint ── */}
-      <div style={{ textAlign: 'center', marginTop: 10, color: '#a99a80', fontSize: 12.5, fontFamily: "'IBM Plex Mono', monospace", fontStyle: 'italic', letterSpacing: 0.5 }}>
+      <div style={{ textAlign: 'center', marginTop: 12, color: '#6B5E4F', fontSize: 12.5, fontFamily: "'IBM Plex Mono', monospace", fontStyle: 'italic', letterSpacing: 0.5 }}>
         grab the corner &amp; drag to turn the page
       </div>
 
@@ -356,12 +357,12 @@ export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRe
       </div>
 
       {/* ── Page counter ── */}
-      <div style={{ textAlign: 'center', marginTop: 10, color: '#cbbfa8', fontSize: 13, letterSpacing: 1, fontFamily: "'IBM Plex Mono', monospace" }}>
+      <div style={{ textAlign: 'center', marginTop: 10, color: '#4A3F33', fontSize: 13, letterSpacing: 1, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600 }}>
         {pageLabel}
       </div>
 
       {/* ── Keyboard hint ── */}
-      <div style={{ textAlign: 'center', marginTop: 6, color: '#6A5F50', fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}>
+      <div style={{ textAlign: 'center', marginTop: 6, color: '#8A7D6B', fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}>
         👆 Swipe, drag corners, or press <b>[←] [→]</b> keys
       </div>
     </div>

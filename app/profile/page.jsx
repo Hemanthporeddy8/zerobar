@@ -7,6 +7,7 @@ import RequireAuth from '../../components/RequireAuth';
 import BottomNav from '../../components/BottomNav';
 import PostCard from '../../components/PostCard';
 import EditProfileModal from '../../components/EditProfileModal';
+import ThemeModal from '../../components/ThemeModal';
 import { getOfflineStash, clearOfflineStash, getOfflineSettings } from '../../lib/offlineStorage';
 
 function ProfileInner() {
@@ -20,6 +21,7 @@ function ProfileInner() {
 
   // Edit Profile Modal
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [themeModalOpen, setThemeModalOpen] = useState(false);
 
   // Tabs: 'posts' or 'stash'
   const [activeTab, setActiveTab] = useState('posts');
@@ -151,6 +153,14 @@ function ProfileInner() {
             </svg>
             Edit Profile
           </button>
+          <button
+            className="signout-btn"
+            onClick={() => setThemeModalOpen(true)}
+            title="Change Theme"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+          >
+            <span>🎨</span> Themes
+          </button>
           <button className="signout-btn" onClick={signOut}>
             Sign out
           </button>
@@ -267,6 +277,12 @@ function ProfileInner() {
         onClose={() => setEditModalOpen(false)}
         profile={profile}
         onSaved={handleProfileSaved}
+      />
+
+      {/* Theme Selection Modal */}
+      <ThemeModal
+        isOpen={themeModalOpen}
+        onClose={() => setThemeModalOpen(false)}
       />
 
       <BottomNav active="profile" />

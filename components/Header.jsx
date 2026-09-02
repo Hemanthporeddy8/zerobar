@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabaseClient';
 import StashModal from './StashModal';
 import NotificationsModal from './NotificationsModal';
 import InstallPrompt from './InstallPrompt';
+import ThemeModal from './ThemeModal';
 
 export default function Header({ onRefresh, isPaperMode, onTogglePaperMode }) {
   const online = useOnlineStatus();
@@ -15,6 +16,7 @@ export default function Header({ onRefresh, isPaperMode, onTogglePaperMode }) {
   const [stashModalOpen, setStashModalOpen] = useState(false);
   const [notifModalOpen, setNotifModalOpen] = useState(false);
   const [installModalOpen, setInstallModalOpen] = useState(false);
+  const [themeModalOpen, setThemeModalOpen] = useState(false);
   const [outboxCount, setOutboxCount] = useState(0);
   const [stashMeta, setStashMeta] = useState(null);
   const [syncing, setSyncing] = useState(false);
@@ -134,6 +136,16 @@ export default function Header({ onRefresh, isPaperMode, onTogglePaperMode }) {
               <span style={{ position: 'absolute', top: 5, right: 6, width: 7, height: 7, borderRadius: '50%', background: 'var(--signal-rust)', boxShadow: '0 0 6px var(--signal-rust)' }}></span>
             </button>
 
+            {/* Theme Switcher Button */}
+            <button
+              className="icon-btn"
+              onClick={() => setThemeModalOpen(true)}
+              title="Change App Theme"
+              style={{ width: 32, height: 32, fontSize: 13 }}
+            >
+              🎨
+            </button>
+
             {outboxCount > 0 && (
               <button
                 className="icon-btn"
@@ -228,6 +240,10 @@ export default function Header({ onRefresh, isPaperMode, onTogglePaperMode }) {
 
       {installModalOpen && (
         <InstallPrompt isOpen={installModalOpen} onClose={() => setInstallModalOpen(false)} />
+      )}
+
+      {themeModalOpen && (
+        <ThemeModal isOpen={themeModalOpen} onClose={() => setThemeModalOpen(false)} />
       )}
     </>
   );
