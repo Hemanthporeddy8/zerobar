@@ -721,15 +721,58 @@ button {
   font-family: 'IBM Plex Mono', monospace;
 }
 
+.p-bio {
+  max-width: 380px;
+  margin: 10px auto 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.p-bio.empty {
+  font-style: italic;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.profile-btn-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 16px auto 0;
+}
+
+.edit-profile-btn {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid var(--brand-gold);
+  color: var(--brand-gold);
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-profile-btn:hover {
+  background: var(--brand-gold);
+  color: #000;
+}
+
 .signout-btn {
-  display: block;
-  margin: 18px auto 0;
+  display: inline-flex;
+  align-items: center;
   background: transparent;
   border: 1px solid var(--border-card);
   color: var(--text-secondary);
-  padding: 8px 20px;
+  padding: 8px 18px;
   border-radius: 999px;
-  font-size: 12.5px;
+  font-size: 12px;
   font-family: 'IBM Plex Mono', monospace;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -739,6 +782,95 @@ button {
   background: rgba(244, 63, 94, 0.1);
   border-color: var(--signal-rust);
   color: var(--signal-rust);
+}
+
+/* Offline Storage & Data Saver HUD */
+.storage-hud-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin: 14px 16px 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.storage-hud-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.storage-hud-title {
+  font-size: 12.5px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.storage-hud-badge {
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--brand-gold);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.storage-hud-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.storage-clear-btn {
+  background: transparent;
+  border: 1px solid var(--border-card);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-family: 'IBM Plex Mono', monospace;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.storage-clear-btn:hover {
+  border-color: var(--signal-rust);
+  color: var(--signal-rust);
+}
+
+/* Profile Activity Tabs */
+.profile-tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border-subtle);
+  margin: 0 16px 12px;
+  gap: 8px;
+}
+
+.profile-tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.profile-tab-btn.active {
+  color: var(--brand-gold);
+  border-bottom-color: var(--brand-gold);
+  font-weight: 700;
 }
 
 /* ---------- Reactions & Actions Bar ---------- */
