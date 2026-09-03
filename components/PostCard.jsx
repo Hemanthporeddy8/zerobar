@@ -289,13 +289,13 @@ export default function PostCard({ post, bookmarked, following, onChange, showFo
       <div
         className="card-media"
         onClick={handleMediaClick}
-        style={isImage ? { height: 190, background: '#090B14', cursor: 'pointer' } : { cursor: 'pointer' }}
+        style={isImage ? { height: 190, background: 'var(--bg-media)', cursor: 'pointer' } : { cursor: 'pointer' }}
       >
         {showHeartPop && <div className="heart-pop">❤️</div>}
 
         <div style={{ position: 'absolute', top: 12, left: 12, right: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 3 }}>
           <span className="kind">{post.kind}</span>
-          <span style={{ fontSize: 10, fontFamily: "'IBM Plex Mono', monospace", background: 'rgba(9,11,20,0.85)', backdropFilter: 'blur(8px)', color: 'var(--brand-gold)', padding: '3px 8px', borderRadius: 6, border: '1px solid var(--border-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>
+          <span style={{ fontSize: 10, fontFamily: "'IBM Plex Mono', monospace", background: 'var(--bg-media-badge)', backdropFilter: 'blur(8px)', color: 'var(--brand-gold)', padding: '3px 8px', borderRadius: 6, border: '1px solid var(--border-subtle)', fontWeight: 600, textTransform: 'uppercase' }}>
             {post.category || 'Trending'}
           </span>
         </div>

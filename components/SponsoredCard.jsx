@@ -38,13 +38,13 @@ export default function SponsoredCard({ post }) {
         post.media_emoji.startsWith('/')));
 
   return (
-    <div className="card" style={{ borderColor: 'rgba(245, 158, 11, 0.35)', background: 'linear-gradient(180deg, #161B30 0%, #111425 100%)' }}>
-      <div className="card-media" style={isImage ? { height: 180, background: '#090B14' } : {}}>
+    <div className="card" style={{ borderColor: 'rgba(245, 158, 11, 0.45)', background: 'var(--bg-card)' }}>
+      <div className="card-media" style={isImage ? { height: 180, background: 'var(--bg-media)' } : {}}>
         <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', gap: 6, zIndex: 3 }}>
           <span className="kind" style={{ background: 'linear-gradient(135deg, var(--brand-gold), var(--brand-amber))', color: '#090B14', fontWeight: 700 }}>
             Sponsored
           </span>
-          <span style={{ fontSize: 10, fontFamily: "'IBM Plex Mono', monospace", background: 'rgba(9,11,20,0.8)', backdropFilter: 'blur(8px)', color: 'var(--text-secondary)', padding: '3px 8px', borderRadius: 6, border: '1px solid var(--border-subtle)', fontWeight: 600 }}>
+          <span style={{ fontSize: 10, fontFamily: "'IBM Plex Mono', monospace", background: 'var(--bg-media-badge)', backdropFilter: 'blur(8px)', color: 'var(--text-secondary)', padding: '3px 8px', borderRadius: 6, border: '1px solid var(--border-subtle)', fontWeight: 600 }}>
             {post.category || 'Featured'}
           </span>
         </div>
