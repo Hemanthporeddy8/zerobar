@@ -15,16 +15,24 @@ export default function AdminModerationPage() {
   const [passError, setPassError] = useState('');
   const [actionMsg, setActionMsg] = useState('');
 
-  const ADMIN_PASS = 'zerobar2026';
-
-  function handleUnlock(e) {
+  async function handleUnlock(e) {
     e.preventDefault();
-    if (passcode.trim() === ADMIN_PASS || (user && user.email?.includes('admin'))) {
-      setIsAuthenticated(true);
-      setPassError('');
-      loadReports();
-    } else {
-      setPassError('Invalid admin passcode. (Default: zerobar2026)');
+    try {
+      const res = await fetch('/api/admin-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passcode: passcode.trim() })
+      });
+      const data = await res.json();
+      if (data.authenticated) {
+        setIsAuthenticated(true);
+        setPassError('');
+        loadReports();
+      } else {
+        setPassError('Invalid admin passcode.');
+      }
+    } catch {
+      setPassError('Error verifying credentials. Try again.');
     }
   }
 
@@ -89,7 +97,7 @@ export default function AdminModerationPage() {
             <label>Admin Key</label>
             <input
               type="password"
-              placeholder="Enter passcode (zerobar2026)"
+              placeholder="Enter admin key"
               value={passcode}
               onChange={(e) => setPasscode(e.target.value)}
               required

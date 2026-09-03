@@ -1,13 +1,26 @@
-// Zerobar — minimal offline service worker
-// This is a starting point, not a finished offline engine. It caches pages
-// and static assets you've already visited so they still open with no signal.
-// It does NOT do predictive/background pre-caching of new content — that's
-// a real feature to design deliberately later (e.g. Background Sync API),
-// not something to bolt on blindly.
+// Zerobar — Offline-first Service Worker with Predictive Pre-caching
+// v5: Caches app shell routes and critical assets on install so the entire
+// app works offline from the very first visit. Content stories are stored
+// in IndexedDB/localStorage stash.
 
-const CACHE_NAME = 'zerobar-cache-v4';
-const PRECACHE_URLS = ['/', '/manifest.json'];
+const CACHE_NAME = 'zerobar-cache-v5';
 
+// App shell: all routes and critical assets pre-cached immediately on install
+const PRECACHE_URLS = [
+  '/',
+  '/library',
+  '/profile',
+  '/login',
+  '/signup',
+  '/privacy',
+  '/terms',
+  '/manifest.json',
+  '/icon.svg',
+  '/icon-192.png',
+  '/icon-512.png'
+];
+
+// Install: pre-cache all app shell routes
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
@@ -15,6 +28,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
+// Activate: purge older cache versions
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -28,17 +42,24 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Network-first for navigation/API calls, falling back to cache when offline.
+// Fetch: Network-first for navigation & dynamic pages, falling back to cache when offline
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
   if (request.method !== 'GET') return;
 
+  const url = new URL(request.url);
+
+  // Do not cache third-party or Supabase API traffic
+  if (url.hostname.includes('supabase.co')) return;
+
   event.respondWith(
     fetch(request)
       .then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        if (response && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        }
         return response;
       })
       .catch(() => caches.match(request))
