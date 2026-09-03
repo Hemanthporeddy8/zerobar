@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthProvider';
 import RequireAuth from '../components/RequireAuth';
@@ -25,6 +25,9 @@ function FeedInner() {
   const [bookmarkedIds, setBookmarkedIds] = useState(new Set());
   const [followingIds, setFollowingIds] = useState(new Set());
   const [isPaperMode, setIsPaperMode] = useState(false);
+  const [offlinePrompt, setOfflinePrompt] = useState(false);
+  const [manualFeedPreference, setManualFeedPreference] = useState(false);
+  const offlineTimerRef = useRef(null);
 
   const loadFeed = useCallback(async () => {
     setLoading(true);
@@ -91,6 +94,11 @@ function FeedInner() {
   }, [user]);
 
   useEffect(() => {
+    // Cold start offline: if opened with zero signal, start directly in Paper Mode
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setIsPaperMode(true);
+    }
+
     loadFeed();
 
     const handleStashUpdate = () => {
@@ -100,14 +108,34 @@ function FeedInner() {
       }
     };
 
+    const handleOffline = () => {
+      // Debounce: Wait 6s of continuous zero signal before suggesting Paper Mode
+      if (offlineTimerRef.current) clearTimeout(offlineTimerRef.current);
+      offlineTimerRef.current = setTimeout(() => {
+        if (!isPaperMode && !manualFeedPreference) {
+          setOfflinePrompt(true);
+        }
+      }, 6000);
+    };
+
+    const handleOnline = () => {
+      if (offlineTimerRef.current) clearTimeout(offlineTimerRef.current);
+      setOfflinePrompt(false);
+      // Silent background stash update without interrupting the user
+      loadFeed();
+    };
+
     window.addEventListener('zerobar_stash_updated', handleStashUpdate);
-    window.addEventListener('online', loadFeed);
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline);
 
     return () => {
+      if (offlineTimerRef.current) clearTimeout(offlineTimerRef.current);
       window.removeEventListener('zerobar_stash_updated', handleStashUpdate);
-      window.removeEventListener('online', loadFeed);
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', handleOnline);
     };
-  }, [loadFeed]);
+  }, [loadFeed, isPaperMode, manualFeedPreference]);
 
   const [activeCategory, setActiveCategory] = useState('All');
 
@@ -135,7 +163,10 @@ function FeedInner() {
         bookmarkedIds={bookmarkedIds}
         followingIds={followingIds}
         onRefresh={loadFeed}
-        onExit={() => setIsPaperMode(false)}
+        onExit={() => {
+          setIsPaperMode(false);
+          setManualFeedPreference(true);
+        }}
       />
     );
   }
@@ -181,6 +212,66 @@ function FeedInner() {
           📰 Paper Mode
         </button>
       </div>
+
+      {/* Debounced Offline Prompt Banner */}
+      {offlinePrompt && !isPaperMode && (
+        <div
+          style={{
+            margin: '8px 18px 4px',
+            padding: '10px 14px',
+            background: 'rgba(217, 119, 6, 0.12)',
+            border: '1px solid var(--brand-amber)',
+            borderRadius: 14,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 10,
+            animation: 'fadeIn 0.25s ease'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: 'var(--text-primary)' }}>
+            <span style={{ fontSize: 16 }}>📰</span>
+            <span>Zero signal · Read as <b>The Zerobar Gazette</b>?</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            <button
+              onClick={() => {
+                setIsPaperMode(true);
+                setOfflinePrompt(false);
+              }}
+              style={{
+                background: 'var(--brand-gold)',
+                color: '#090B14',
+                border: 'none',
+                borderRadius: 999,
+                padding: '4px 12px',
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Open Gazette
+            </button>
+            <button
+              onClick={() => {
+                setOfflinePrompt(false);
+                setManualFeedPreference(true);
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-muted)',
+                fontSize: 14,
+                cursor: 'pointer',
+                padding: '0 4px'
+              }}
+              title="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="section-label">{activeCategory === 'All' ? "Today's feed" : `${activeCategory} stream`}</div>
       {loading && <p className="empty-note">Loading stream…</p>}
