@@ -231,7 +231,7 @@ function FeedInner() {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: 'var(--text-primary)' }}>
             <span style={{ fontSize: 16 }}>📰</span>
-            <span>Zero signal · Read as <b>The Zerobar Gazette</b>?</span>
+            <span>Zero signal · Read as <b>The PageGG Gazette</b>?</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
             <button

@@ -57,14 +57,14 @@ export default function InstallPrompt({ isOpen, onClose }) {
           ⚡
         </div>
 
-        <h3 style={{ fontSize: 20, margin: '0 0 8px', letterSpacing: '-0.02em' }}>Install Zerobar App</h3>
+        <h3 style={{ fontSize: 20, margin: '0 0 8px', letterSpacing: '-0.02em' }}>Install PageGG App</h3>
         <p style={{ color: 'var(--text-secondary)', fontSize: 13.5, margin: '0 0 20px', lineHeight: 1.5 }}>
           Get instant 1-tap offline access from your phone home screen with zero app store downloads.
         </p>
 
         {isInstalled ? (
           <div style={{ padding: '12px 16px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: 14, color: 'var(--signal-green)', fontSize: 13.5, fontWeight: 600 }}>
-            ✓ Zerobar is already installed on this device!
+            ✓ PageGG is already installed on this device!
           </div>
         ) : isIOS ? (
           <div style={{ background: 'var(--bg-base)', border: '1px solid var(--border-card)', borderRadius: 16, padding: '16px', textAlign: 'left', fontSize: 13, color: 'var(--text-secondary)' }}>

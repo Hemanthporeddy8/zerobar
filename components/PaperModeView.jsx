@@ -189,7 +189,7 @@ export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRe
   if (!posts || posts.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 20px', color: '#5B4E3E', background: '#F8F5EE', minHeight: '80vh' }}>
-        <h2>The Zerobar Gazette</h2>
+        <h2>The PageGG Gazette</h2>
         <p>No stories printed for today yet.</p>
         <button className="btn btn-primary" onClick={onExit} style={{ marginTop: 20 }}>
           Exit Paper Mode
@@ -255,7 +255,7 @@ export default function PaperModeView({ posts, bookmarkedIds, followingIds, onRe
           textTransform: 'uppercase',
           color: '#1B1917'
         }}>
-          The Zerobar Gazette
+          The PageGG Gazette
         </h1>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #1B1917', borderBottom: '1px solid #1B1917', padding: '3px 0', fontSize: 10.5, fontFamily: "'IBM Plex Mono', monospace", color: '#5B4E3E' }}>

@@ -18,7 +18,7 @@ export default function PrivacyPolicyPage() {
         <section style={{ marginBottom: 24 }}>
           <h2 style={{ fontSize: 18, color: 'var(--amber)', marginBottom: 8 }}>1. Our Privacy Philosophy</h2>
           <p style={{ color: 'var(--mist)' }}>
-            Zerobar is built with a <b>privacy-first, low-bandwidth architecture</b>. We believe in providing a seamless, fast social reading experience without intrusive surveillance, data harvesting, or third-party ad networks.
+            PageGG is built with a <b>privacy-first, low-bandwidth architecture</b>. We believe in providing a seamless, fast social reading experience without intrusive surveillance, data harvesting, or third-party ad networks.
           </p>
         </section>
 
@@ -34,14 +34,14 @@ export default function PrivacyPolicyPage() {
         <section style={{ marginBottom: 24 }}>
           <h2 style={{ fontSize: 18, color: 'var(--amber)', marginBottom: 8 }}>3. Offline Caching &amp; Local Storage</h2>
           <p style={{ color: 'var(--mist)' }}>
-            To enable offline reading on flights and subways, Zerobar stores recent feed posts, user bookmarks, and pending outbox actions in your browser&apos;s <code>localStorage</code> and <code>CacheStorage</code>. This data resides on your physical device and can be cleared at any time through your browser settings.
+            To enable offline reading on flights and subways, PageGG stores recent feed posts, user bookmarks, and pending outbox actions in your browser&apos;s <code>localStorage</code> and <code>CacheStorage</code>. This data resides on your physical device and can be cleared at any time through your browser settings.
           </p>
         </section>
 
         <section style={{ marginBottom: 24 }}>
           <h2 style={{ fontSize: 18, color: 'var(--amber)', marginBottom: 8 }}>4. Zero Third-Party Ad Networks</h2>
           <p style={{ color: 'var(--mist)' }}>
-            Zerobar does <b>not</b> use third-party programmatic ad networks (e.g. Google AdSense, Meta Pixel, or data brokers). All sponsored posts are direct-sold and served directly from our database, ensuring your reading habits are never sold to external advertisers.
+            PageGG does <b>not</b> use third-party programmatic ad networks (e.g. Google AdSense, Meta Pixel, or data brokers). All sponsored posts are direct-sold and served directly from our database, ensuring your reading habits are never sold to external advertisers.
           </p>
         </section>
 
@@ -55,7 +55,7 @@ export default function PrivacyPolicyPage() {
         <section style={{ marginBottom: 24 }}>
           <h2 style={{ fontSize: 18, color: 'var(--amber)', marginBottom: 8 }}>6. Contact Us</h2>
           <p style={{ color: 'var(--mist)' }}>
-            For privacy inquiries or data requests, please contact us at <code>privacy@zerobar.app</code>.
+            For privacy inquiries or data requests, please contact us at <code>privacy@pagegg.com</code>.
           </p>
         </section>
       </div>

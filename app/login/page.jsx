@@ -28,7 +28,7 @@ export default function LoginPage() {
   return (
     <div className="auth-wrap">
       <h1>Welcome back</h1>
-      <p className="sub">Log in to Zerobar.</p>
+      <p className="sub">Log in to PageGG.</p>
       <form onSubmit={submit}>
         <div className="field">
           <label>Email</label>

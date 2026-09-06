@@ -1,6 +1,6 @@
 {
-  "name": "Zerobar — Offline Social Reader",
-  "short_name": "Zerobar",
+  "name": "PageGG — Offline Social Reader",
+  "short_name": "PageGG",
   "description": "Full feed. Zero signal. Offline-first social reader.",
   "start_url": "/",
   "display": "standalone",

@@ -3,7 +3,7 @@ import { AuthProvider } from '../components/AuthProvider';
 import OfflineRegister from '../components/OfflineRegister';
 
 export const metadata = {
-  title: 'Zerobar — Full feed. Zero signal.',
+  title: 'PageGG — Full feed. Zero signal.',
   description: 'Ultra-fast, low-bandwidth, offline-first social reader for commutes, flights, and low signal zones.',
   manifest: '/manifest.json',
   icons: {

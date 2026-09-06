@@ -33,7 +33,7 @@ export default function SignupPage() {
   return (
     <div className="auth-wrap">
       <h1>Create your account</h1>
-      <p className="sub">Join Zerobar in a minute.</p>
+      <p className="sub">Join PageGG in a minute.</p>
       <form onSubmit={submit}>
         <div className="field">
           <label>Username</label>

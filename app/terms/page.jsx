@@ -18,14 +18,14 @@ export default function TermsOfServicePage() {
         <section style={{ marginBottom: 24 }}>
           <h2 style={{ fontSize: 18, color: 'var(--amber)', marginBottom: 8 }}>1. Acceptance of Terms</h2>
           <p style={{ color: 'var(--mist)' }}>
-            By creating an account or accessing Zerobar, you agree to comply with these Terms of Service. If you do not agree, please do not use the service.
+            By creating an account or accessing PageGG, you agree to comply with these Terms of Service. If you do not agree, please do not use the service.
           </p>
         </section>
 
         <section style={{ marginBottom: 24 }}>
           <h2 style={{ fontSize: 18, color: 'var(--amber)', marginBottom: 8 }}>2. User-Generated Content &amp; Conduct</h2>
           <p style={{ color: 'var(--mist)' }}>
-            You retain ownership of the content you publish on Zerobar. By posting, you grant Zerobar a non-exclusive license to display and distribute your content across the platform. You agree not to post:
+            You retain ownership of the content you publish on PageGG. By posting, you grant PageGG a non-exclusive license to display and distribute your content across the platform. You agree not to post:
           </p>
           <ul style={{ color: 'var(--mist)', paddingLeft: 20 }}>
             <li>Illegal, threatening, defamatory, or abusive material.</li>
@@ -37,14 +37,14 @@ export default function TermsOfServicePage() {
         <section style={{ marginBottom: 24 }}>
           <h2 style={{ fontSize: 18, color: 'var(--amber)', marginBottom: 8 }}>3. Content Moderation &amp; Reporting</h2>
           <p style={{ color: 'var(--mist)' }}>
-            Zerobar maintains a community reporting tool. Content flagged as violating our standards or applicable regulations may be reviewed and removed without prior notice. Accounts engaging in repeat violations may be suspended or permanently banned.
+            PageGG maintains a community reporting tool. Content flagged as violating our standards or applicable regulations may be reviewed and removed without prior notice. Accounts engaging in repeat violations may be suspended or permanently banned.
           </p>
         </section>
 
         <section style={{ marginBottom: 24 }}>
           <h2 style={{ fontSize: 18, color: 'var(--amber)', marginBottom: 8 }}>4. Offline Availability &amp; Disclaimer</h2>
           <p style={{ color: 'var(--mist)' }}>
-            While Zerobar provides offline caching for convenience, offline availability depends on your device&apos;s storage capacity and operating system cache retention policies. The service is provided &quot;as is&quot; without warranties of uninterrupted availability.
+            While PageGG provides offline caching for convenience, offline availability depends on your device&apos;s storage capacity and operating system cache retention policies. The service is provided &quot;as is&quot; without warranties of uninterrupted availability.
           </p>
         </section>
 
@@ -58,7 +58,7 @@ export default function TermsOfServicePage() {
         <section style={{ marginBottom: 24 }}>
           <h2 style={{ fontSize: 18, color: 'var(--amber)', marginBottom: 8 }}>6. Contact Information</h2>
           <p style={{ color: 'var(--mist)' }}>
-            For legal inquiries or terms clarification, reach out to <code>legal@zerobar.app</code>.
+            For legal inquiries or terms clarification, reach out to <code>legal@pagegg.com</code>.
           </p>
         </section>
       </div>

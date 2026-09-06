@@ -152,7 +152,7 @@ function ProfileInner() {
           <a href="/terms" style={{ color: 'var(--text-secondary)' }}>Terms</a>
         </div>
         <p style={{ color: 'var(--text-muted)', fontSize: 10.5, marginTop: 10, fontFamily: "'IBM Plex Mono', monospace" }}>
-          Zerobar v1.0 · Offline-first social reader
+          PageGG v1.0 · Offline-first social reader
         </p>
       </div>
 

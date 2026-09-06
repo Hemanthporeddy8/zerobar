@@ -21,7 +21,7 @@ export default function AdvertiseLanding() {
 
   return (
     <div className="auth-wrap" style={{ maxWidth: 480 }}>
-      <h1>Advertise on Zerobar</h1>
+      <h1>Advertise on PageGG</h1>
       <p className="sub">
         Your card, in a real reader's feed — online or off. No ad network middleman, no
         auction, no cut taken out before it reaches us.

@@ -131,8 +131,8 @@ export default function PostCard({ post, bookmarked, following, onChange, showFo
   // 1-Tap Share
   async function handleShare() {
     const shareData = {
-      title: 'Zerobar — ' + post.title,
-      text: post.title + ' (Read on Zerobar)',
+      title: 'PageGG — ' + post.title,
+      text: post.title + ' (Read on PageGG)',
       url: window.location.href
     };
 
