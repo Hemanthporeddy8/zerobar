@@ -53,8 +53,8 @@ export default function InstallPrompt({ isOpen, onClose }) {
           <button className="icon-btn" onClick={onClose}>✕</button>
         </div>
 
-        <div style={{ width: 64, height: 64, borderRadius: 20, background: 'linear-gradient(135deg, var(--brand-gold), var(--brand-amber))', color: '#090B14', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, margin: '0 auto 16px', boxShadow: 'var(--glow-amber)' }}>
-          ⚡
+        <div style={{ width: 64, height: 64, borderRadius: 20, overflow: 'hidden', margin: '0 auto 16px', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+          <img src="/icon-192.png" alt="PageGG" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         </div>
 
         <h3 style={{ fontSize: 20, margin: '0 0 8px', letterSpacing: '-0.02em' }}>Install PageGG App</h3>

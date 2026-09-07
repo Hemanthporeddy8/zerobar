@@ -70,7 +70,7 @@ export default function Header({ onRefresh, isPaperMode, onTogglePaperMode }) {
       <div className="signalbar">
         <div className="signalbar-top">
           <div className="brand">
-            <div className="brand-icon">⚡</div>
+            <img src="/icon-192.png" alt="PageGG" style={{ width: 24, height: 24, borderRadius: 6, display: 'block', objectFit: 'cover' }} />
             <span>PageGG</span>
             <span className={`dot ${online ? '' : 'off'}`} title={online ? 'Connected' : 'Offline'}></span>
           </div>
