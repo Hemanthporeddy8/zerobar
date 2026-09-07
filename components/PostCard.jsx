@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './AuthProvider';
 import { queueOfflineAction } from '../lib/offlineStorage';
 
-export default function PostCard({ post, bookmarked, following, onChange, showFollow = true }) {
+export default function PostCard({ post, bookmarked, following, onChange, onTagClick, showFollow = true }) {
   const { user } = useAuth();
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
 
@@ -333,7 +333,27 @@ export default function PostCard({ post, bookmarked, following, onChange, showFo
           )}
         </div>
 
-        <p className="card-title">{post.title}</p>
+        {post.location && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, margin: '2px 0 6px' }}>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              color: 'var(--signal-green)',
+              background: 'rgba(16, 185, 129, 0.1)',
+              border: '1px solid rgba(16, 185, 129, 0.25)',
+              padding: '2px 8px',
+              borderRadius: 999,
+              fontSize: 11,
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontWeight: 500
+            }}>
+              {post.location.startsWith('📍') ? post.location : `📍 ${post.location}`}
+            </span>
+          </div>
+        )}
+
+        <p className="card-title">{renderFormattedContent(post.title, onTagClick)}</p>
 
         {/* Post Metadata & Quick Actions */}
         <div className="card-meta">
@@ -443,6 +463,68 @@ export default function PostCard({ post, bookmarked, following, onChange, showFo
       </div>
     </div>
   );
+}
+
+function renderFormattedContent(text, onTagClick) {
+  if (!text) return null;
+  const parts = text.split(/(\s+)/);
+  return parts.map((part, index) => {
+    // Hashtags: #tag
+    if (part.startsWith('#') && part.length > 1) {
+      const cleanTag = part.replace(/[.,!?;:()]+$/, '');
+      const trailingPunct = part.slice(cleanTag.length);
+      return (
+        <span key={index}>
+          <span
+            onClick={(e) => {
+              e.stopPropagation();
+              onTagClick && onTagClick(cleanTag);
+            }}
+            style={{
+              color: 'var(--brand-gold)',
+              fontWeight: 600,
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              textDecorationColor: 'rgba(251, 191, 36, 0.45)',
+              textUnderlineOffset: '2px'
+            }}
+            title={`Filter posts by ${cleanTag}`}
+          >
+            {cleanTag}
+          </span>
+          {trailingPunct}
+        </span>
+      );
+    }
+    // User / Pigeon mentions: @user or 🕊️user
+    if ((part.startsWith('@') || part.startsWith('🕊️')) && part.length > 1) {
+      const cleanMention = part.replace(/^[🕊️@]+/, '').replace(/[.,!?;:()]+$/, '');
+      const trailingPunct = part.slice(part.length - (part.endsWith(cleanMention) ? 0 : 1));
+      return (
+        <span key={index}>
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 2,
+              background: 'rgba(96, 165, 250, 0.12)',
+              border: '1px solid rgba(96, 165, 250, 0.28)',
+              color: '#60A5FA',
+              padding: '1px 6px',
+              borderRadius: 6,
+              fontWeight: 600,
+              fontSize: '0.92em'
+            }}
+            title={`Pigeon Tag: @${cleanMention}`}
+          >
+            🕊️@{cleanMention}
+          </span>
+          {trailingPunct}
+        </span>
+      );
+    }
+    return part;
+  });
 }
 
 

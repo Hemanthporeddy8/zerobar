@@ -55,6 +55,7 @@ create table if not exists public.posts (
   repost_of uuid references public.posts(id) on delete set null,
   source_name text,
   source_url text,
+  location text,
   created_at timestamptz default now()
 );
 

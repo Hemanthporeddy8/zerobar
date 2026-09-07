@@ -138,11 +138,18 @@ function FeedInner() {
   }, [loadFeed, isPaperMode, manualFeedPreference]);
 
   const [activeCategory, setActiveCategory] = useState('All');
+  const [selectedTag, setSelectedTag] = useState(null);
 
   // Interleave sponsored cards into the feed every SPONSORED_EVERY posts.
-  const filteredPosts = activeCategory === 'All'
+  let filteredPosts = activeCategory === 'All'
     ? posts
     : posts.filter((p) => (p.category || 'Trending').toLowerCase() === activeCategory.toLowerCase());
+
+  if (selectedTag) {
+    filteredPosts = filteredPosts.filter((p) =>
+      (p.title || '').toLowerCase().includes(selectedTag.toLowerCase())
+    );
+  }
 
   const items = [];
   let sponsoredIndex = 0;
@@ -273,10 +280,50 @@ function FeedInner() {
         </div>
       )}
 
-      <div className="section-label">{activeCategory === 'All' ? "Today's feed" : `${activeCategory} stream`}</div>
+      {/* Active Tag Filter Banner */}
+      {selectedTag && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            margin: '4px 18px 10px',
+            padding: '7px 14px',
+            background: 'rgba(251, 191, 36, 0.12)',
+            border: '1px solid var(--brand-amber)',
+            borderRadius: 12,
+            animation: 'fadeIn 0.2s ease'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--brand-gold)', fontWeight: 600 }}>
+            <span>🏷️ Filtered by:</span>
+            <span style={{ textDecoration: 'underline' }}>{selectedTag}</span>
+          </div>
+          <button
+            onClick={() => setSelectedTag(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              fontSize: 12,
+              padding: '2px 6px',
+              fontFamily: "'IBM Plex Mono', monospace"
+            }}
+          >
+            ✕ Clear
+          </button>
+        </div>
+      )}
+
+      <div className="section-label">
+        {selectedTag ? `Posts tagged ${selectedTag}` : activeCategory === 'All' ? "Today's feed" : `${activeCategory} stream`}
+      </div>
       {loading && <p className="empty-note">Loading stream…</p>}
       {!loading && filteredPosts.length === 0 && (
-        <p className="empty-note">No posts in this stream yet — tap + to publish.</p>
+        <p className="empty-note">
+          {selectedTag ? `No posts found matching ${selectedTag}.` : 'No posts in this stream yet — tap + to publish.'}
+        </p>
       )}
       {items.map((item) =>
         item.type === 'sponsored' ? (
@@ -288,8 +335,48 @@ function FeedInner() {
             bookmarked={bookmarkedIds.has(item.data.id)}
             following={followingIds.has(item.data.user_id)}
             onChange={loadFeed}
+            onTagClick={(tag) => setSelectedTag(tag)}
           />
         )
+      )}
+
+      {/* End of Stash Offline Card */}
+      {!loading && items.length > 0 && typeof navigator !== 'undefined' && !navigator.onLine && (
+        <div
+          style={{
+            margin: '20px 18px 40px',
+            padding: '18px 16px',
+            background: 'var(--bg-card)',
+            border: '1px dashed var(--brand-amber)',
+            borderRadius: 16,
+            textAlign: 'center',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+          }}
+        >
+          <span style={{ fontSize: 26 }}>🏁</span>
+          <h4 style={{ margin: '8px 0 4px', fontSize: 15, color: 'var(--text-primary)' }}>
+            You're all caught up with your offline stash!
+          </h4>
+          <p style={{ margin: '0 0 14px', fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+            For an uninterrupted, calm tactile reading experience with zero signal, turn the pages in Paper Mode.
+          </p>
+          <button
+            onClick={() => setIsPaperMode(true)}
+            style={{
+              background: 'linear-gradient(135deg, var(--brand-gold), var(--brand-amber))',
+              color: '#090B14',
+              border: 'none',
+              borderRadius: 999,
+              padding: '8px 18px',
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: "'IBM Plex Mono', monospace"
+            }}
+          >
+            📰 Read in The PageGG Gazette
+          </button>
+        </div>
       )}
       <button className="fab" onClick={() => setComposeOpen(true)} title="New Post">
         +
