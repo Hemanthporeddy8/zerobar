@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './AuthProvider';
 import { queueOfflineAction } from '../lib/offlineStorage';
 import { apiCreatePost } from '../lib/apiClient';
 
 const CATEGORIES = ['Trending', 'Local', 'Tech', 'Career'];
-const EMOJI_BADGES = ['✍️', '📸', '⚡', '🚀', '💡', '🚇', '🗞️', '☕', '🎧', '📣'];
+const EMOJI_BADGES = ['✍️', '⚡', '🚀', '💡', '🚇', '🗞️', '☕', '🎧', '📣'];
 const LOCATION_PRESETS = ['📍 Metro Tunnel', '📍 Flight / Airborne', '📍 Train Station', '📍 Bangalore', '📍 Hyderabad', '📍 Delhi NCR'];
 
 export default function ComposeModal({ onClose, onPosted }) {
@@ -16,54 +16,9 @@ export default function ComposeModal({ onClose, onPosted }) {
   const [category, setCategory] = useState('Trending');
   const [selectedEmoji, setSelectedEmoji] = useState('✍️');
   const [location, setLocation] = useState('');
-  const [imagePreview, setImagePreview] = useState(null);
-  const [imageSizeKB, setImageSizeKB] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef(null);
 
   const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
-
-  // Compress image on the client before saving/stashing
-  function processImageFile(file) {
-    if (!file || !file.type.startsWith('image/')) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 720;
-        const scaleSize = MAX_WIDTH / Math.max(img.width, MAX_WIDTH);
-        canvas.width = Math.min(img.width, MAX_WIDTH);
-        canvas.height = img.height * scaleSize;
-
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        // Compress to WebP / JPEG at 0.72 quality
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.72);
-        const approxKB = Math.round((compressedBase64.length * 3) / 4 / 1024);
-
-        setImagePreview(compressedBase64);
-        setImageSizeKB(approxKB);
-        setSelectedEmoji('📸');
-      };
-      img.src = event.target?.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function handleImageUpload(e) {
-    const file = e.target.files?.[0];
-    if (file) processImageFile(file);
-  }
-
-  function removeImage() {
-    setImagePreview(null);
-    setImageSizeKB(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  }
 
   function insertTag(tag) {
     setText((prev) => (prev ? `${prev} ${tag} ` : `${tag} `));
@@ -74,8 +29,8 @@ export default function ComposeModal({ onClose, onPosted }) {
     if (!title || !user) return;
     setSubmitting(true);
 
-    const mediaValue = imagePreview || selectedEmoji || '✍️';
-    const kind = imagePreview ? 'Photo' : 'Post';
+    const mediaValue = selectedEmoji || '✍️';
+    const kind = 'Post';
     const locValue = location.trim() || null;
 
     const postPayload = {
@@ -125,23 +80,7 @@ export default function ComposeModal({ onClose, onPosted }) {
         className="modal"
         style={{
           maxHeight: '90vh',
-          overflowY: 'auto',
-          border: isDragging ? '2px dashed var(--brand-gold)' : '1px solid var(--border-card)',
-          boxShadow: isDragging ? '0 0 25px rgba(251, 191, 36, 0.25)' : undefined
-        }}
-        onDragOver={(e) => {
-          e.preventDefault();
-          setIsDragging(true);
-        }}
-        onDragLeave={(e) => {
-          e.preventDefault();
-          setIsDragging(false);
-        }}
-        onDrop={(e) => {
-          e.preventDefault();
-          setIsDragging(false);
-          const file = e.dataTransfer?.files?.[0];
-          if (file) processImageFile(file);
+          overflowY: 'auto'
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -155,38 +94,101 @@ export default function ComposeModal({ onClose, onPosted }) {
           placeholder="What's happening on your route today? Use #tags or 🕊️@username..."
           value={text}
           onChange={(e) => setText(e.target.value)}
-          rows={3}
+          rows={4}
+          autoFocus
+          style={{ width: '100%', resize: 'vertical' }}
         />
 
-        {/* Quick Helper Tags Tray */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, alignItems: 'center' }}>
-          <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontFamily: "'IBM Plex Mono', monospace" }}>
+        {/* Quick Tags Bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: "'IBM Plex Mono', monospace" }}>
             Add:
           </span>
-          {['#metro', '#transit', '#tech', '#local', '🕊️@'].map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => insertTag(t)}
-              style={{
-                background: t.startsWith('🕊️') ? 'rgba(96, 165, 250, 0.12)' : 'rgba(251, 191, 36, 0.1)',
-                border: t.startsWith('🕊️') ? '1px solid rgba(96, 165, 250, 0.3)' : '1px solid rgba(251, 191, 36, 0.3)',
-                color: t.startsWith('🕊️') ? '#60A5FA' : 'var(--brand-gold)',
-                borderRadius: 999,
-                padding: '2px 8px',
-                fontSize: 11,
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: "'IBM Plex Mono', monospace"
-              }}
-            >
-              {t}
-            </button>
-          ))}
+          <button
+            type="button"
+            onClick={() => insertTag('#metro')}
+            style={{
+              background: 'rgba(251, 191, 36, 0.12)',
+              border: '1px solid rgba(251, 191, 36, 0.3)',
+              color: 'var(--brand-gold)',
+              borderRadius: 6,
+              padding: '2px 7px',
+              fontSize: 11,
+              fontFamily: "'IBM Plex Mono', monospace",
+              cursor: 'pointer'
+            }}
+          >
+            #metro
+          </button>
+          <button
+            type="button"
+            onClick={() => insertTag('#transit')}
+            style={{
+              background: 'rgba(251, 191, 36, 0.12)',
+              border: '1px solid rgba(251, 191, 36, 0.3)',
+              color: 'var(--brand-gold)',
+              borderRadius: 6,
+              padding: '2px 7px',
+              fontSize: 11,
+              fontFamily: "'IBM Plex Mono', monospace",
+              cursor: 'pointer'
+            }}
+          >
+            #transit
+          </button>
+          <button
+            type="button"
+            onClick={() => insertTag('#tech')}
+            style={{
+              background: 'rgba(251, 191, 36, 0.12)',
+              border: '1px solid rgba(251, 191, 36, 0.3)',
+              color: 'var(--brand-gold)',
+              borderRadius: 6,
+              padding: '2px 7px',
+              fontSize: 11,
+              fontFamily: "'IBM Plex Mono', monospace",
+              cursor: 'pointer'
+            }}
+          >
+            #tech
+          </button>
+          <button
+            type="button"
+            onClick={() => insertTag('#local')}
+            style={{
+              background: 'rgba(251, 191, 36, 0.12)',
+              border: '1px solid rgba(251, 191, 36, 0.3)',
+              color: 'var(--brand-gold)',
+              borderRadius: 6,
+              padding: '2px 7px',
+              fontSize: 11,
+              fontFamily: "'IBM Plex Mono', monospace",
+              cursor: 'pointer'
+            }}
+          >
+            #local
+          </button>
+          <button
+            type="button"
+            onClick={() => insertTag('🕊️@')}
+            style={{
+              background: 'rgba(56, 189, 248, 0.12)',
+              border: '1px solid rgba(56, 189, 248, 0.3)',
+              color: '#38bdf8',
+              borderRadius: 6,
+              padding: '2px 7px',
+              fontSize: 11,
+              fontFamily: "'IBM Plex Mono', monospace",
+              cursor: 'pointer'
+            }}
+            title="Pigeon Tag User"
+          >
+            🕊️@
+          </button>
         </div>
 
-        {/* Location Selector Bar */}
-        <div style={{ marginTop: 14 }}>
+        {/* Location Picker */}
+        <div style={{ marginTop: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: "'IBM Plex Mono', monospace", textTransform: 'uppercase' }}>
               📍 Transit / City Location (Optional)
@@ -241,85 +243,6 @@ export default function ComposeModal({ onClose, onPosted }) {
             }}
           />
         </div>
-
-        {/* Image Preview / Drag & Drop Upload Zone */}
-        {imagePreview ? (
-          <div style={{ position: 'relative', marginTop: 12, borderRadius: 14, overflow: 'hidden', border: '1px solid var(--border-card)', background: 'var(--bg-card)' }}>
-            <img
-              src={imagePreview}
-              alt="Preview"
-              style={{ width: '100%', maxHeight: 180, objectFit: 'cover', display: 'block' }}
-            />
-            <button
-              onClick={removeImage}
-              style={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                background: 'rgba(9, 11, 20, 0.85)',
-                border: '1px solid var(--border-card)',
-                color: 'var(--text-primary)',
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 12
-              }}
-            >
-              ✕
-            </button>
-            <span style={{ position: 'absolute', bottom: 8, left: 8, background: 'rgba(0,0,0,0.7)', color: 'var(--signal-green)', fontSize: 10.5, padding: '2px 8px', borderRadius: 6, fontFamily: "'IBM Plex Mono', monospace" }}>
-              ⚡ Compressed: ~{imageSizeKB} KB (Data Saver Ready)
-            </span>
-          </div>
-        ) : (
-          <div
-            style={{
-              marginTop: 12,
-              padding: '12px 14px',
-              borderRadius: 12,
-              border: '1px dashed var(--border-card)',
-              background: isDragging ? 'rgba(251, 191, 36, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 10
-            }}
-          >
-            <input
-              type="file"
-              accept="image/*"
-              ref={fileInputRef}
-              onChange={handleImageUpload}
-              style={{ display: 'none' }}
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '6px 12px',
-                borderRadius: 8,
-                background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid var(--border-subtle)',
-                color: 'var(--brand-gold)',
-                fontSize: 12,
-                fontFamily: "'IBM Plex Mono', monospace",
-                cursor: 'pointer'
-              }}
-            >
-              📷 Attach Photo
-            </button>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-              {isDragging ? 'Drop image now!' : 'Or drag & drop photo here'}
-            </span>
-          </div>
-        )}
 
         {/* Emoji Badge Tray */}
         <div style={{ marginTop: 12 }}>
