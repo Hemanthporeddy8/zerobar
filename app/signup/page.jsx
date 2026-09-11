@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
+import { apiAuthSignup } from '../../lib/apiClient';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -17,17 +18,27 @@ export default function SignupPage() {
     e.preventDefault();
     setError('');
     setSubmitting(true);
-    const { error: err } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { username } }
-    });
+
+    if (isSupabaseConfigured) {
+      const { error: err } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { username } }
+      });
+      if (!err) {
+        setSubmitting(false);
+        router.push('/');
+        return;
+      }
+    }
+
+    const authRes = await apiAuthSignup(email, password, username);
     setSubmitting(false);
-    if (err) {
-      setError(err.message);
+    if (authRes.success || authRes.user) {
+      window.location.href = '/';
       return;
     }
-    router.push('/');
+    setError(authRes.error || 'Failed to create account');
   }
 
   return (

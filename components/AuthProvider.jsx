@@ -1,7 +1,8 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
+import { apiGetAuthUser, apiAuthLogout } from '../lib/apiClient';
 
 const AuthContext = createContext({ user: null, loading: true, signOut: async () => {} });
 
@@ -10,20 +11,41 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setUser(data?.session?.user ?? null);
+    async function initUser() {
+      if (isSupabaseConfigured) {
+        const { data } = await supabase.auth.getSession();
+        if (data?.session?.user) {
+          setUser(data.session.user);
+          setLoading(false);
+          return;
+        }
+      }
+
+      const apiUser = await apiGetAuthUser();
+      setUser(apiUser || null);
       setLoading(false);
-    });
+    }
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
+    initUser();
 
-    return () => listener?.subscription?.unsubscribe();
+    if (isTursoConfiguredOrSupabase(isSupabaseConfigured)) {
+      const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user ?? null);
+      });
+      return () => listener?.subscription?.unsubscribe();
+    }
   }, []);
 
+  function isTursoConfiguredOrSupabase(supabaseActive) {
+    return Boolean(supabaseActive);
+  }
+
   async function signOut() {
-    await supabase.auth.signOut();
+    if (isSupabaseConfigured) {
+      await supabase.auth.signOut();
+    }
+    await apiAuthLogout();
+    setUser(null);
   }
 
   return (

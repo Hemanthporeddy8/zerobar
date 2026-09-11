@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './AuthProvider';
 import { queueOfflineAction } from '../lib/offlineStorage';
+import { apiCreatePost } from '../lib/apiClient';
 
 const CATEGORIES = ['Trending', 'Local', 'Tech', 'Career'];
 const EMOJI_BADGES = ['✍️', '📸', '⚡', '🚀', '💡', '🚇', '🗞️', '☕', '🎧', '📣'];
@@ -103,14 +104,7 @@ export default function ComposeModal({ onClose, onPosted }) {
     }
 
     try {
-      const { error } = await supabase.from('posts').insert({
-        user_id: user.id,
-        category,
-        kind,
-        title,
-        location: locValue,
-        media_emoji: mediaValue
-      });
+      const { error } = await apiCreatePost(postPayload);
       if (error) throw error;
     } catch {
       queueOfflineAction({

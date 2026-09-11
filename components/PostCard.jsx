@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './AuthProvider';
 import { queueOfflineAction } from '../lib/offlineStorage';
+import { apiToggleReaction, apiToggleBookmark } from '../lib/apiClient';
 
 export default function PostCard({ post, bookmarked, following, onChange, onTagClick, showFollow = true }) {
   const { user } = useAuth();
@@ -78,12 +79,7 @@ export default function PostCard({ post, bookmarked, following, onChange, onTagC
     }
 
     try {
-      if (!newReaction) {
-        await supabase.from('post_reactions').delete().eq('user_id', user.id).eq('post_id', post.id);
-      } else {
-        await supabase.from('post_reactions').delete().eq('user_id', user.id).eq('post_id', post.id);
-        await supabase.from('post_reactions').insert({ user_id: user.id, post_id: post.id, reaction_type: newReaction });
-      }
+      await apiToggleReaction(post.id, user.id, newReaction || 'like');
     } catch {
       queueOfflineAction({ type: 'TOGGLE_REACTION', payload });
     }
@@ -166,11 +162,7 @@ export default function PostCard({ post, bookmarked, following, onChange, onTagC
     }
 
     try {
-      if (bookmarked) {
-        await supabase.from('bookmarks').delete().eq('user_id', user.id).eq('post_id', post.id);
-      } else {
-        await supabase.from('bookmarks').insert({ user_id: user.id, post_id: post.id });
-      }
+      await apiToggleBookmark(post.id, user.id);
     } catch {
       queueOfflineAction({
         type: 'TOGGLE_BOOKMARK',

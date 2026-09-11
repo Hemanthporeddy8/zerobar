@@ -10,6 +10,7 @@ import PostCard from '../components/PostCard';
 import ComposeModal from '../components/ComposeModal';
 import SponsoredCard from '../components/SponsoredCard';
 import { getOfflineStash, saveOfflineStash, getOfflineSettings } from '../lib/offlineStorage';
+import { apiGetPosts } from '../lib/apiClient';
 
 import PaperModeView from '../components/PaperModeView';
 
@@ -43,11 +44,24 @@ function FeedInner() {
         return;
       }
 
-      const { data: postData, error: postErr } = await supabase
-        .from('posts')
-        .select('*, profiles:user_id ( username, avatar_emoji )')
-        .order('created_at', { ascending: false })
-        .limit(60);
+      let livePosts = [];
+      try {
+        const { posts: apiPosts } = await apiGetPosts({ limit: 60 });
+        if (apiPosts && apiPosts.length > 0) {
+          livePosts = apiPosts;
+        }
+      } catch {
+        // Fallback to supabase/mock
+      }
+
+      if (livePosts.length === 0) {
+        const { data: postData } = await supabase
+          .from('posts')
+          .select('*, profiles:user_id ( username, avatar_emoji )')
+          .order('created_at', { ascending: false })
+          .limit(60);
+        livePosts = postData || [];
+      }
 
       const { data: sponsoredData } = await supabase
         .from('sponsored_posts')
@@ -56,9 +70,6 @@ function FeedInner() {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (postErr) throw postErr;
-
-      const livePosts = postData || [];
       const liveSponsored = sponsoredData || [];
 
       setPosts(livePosts);

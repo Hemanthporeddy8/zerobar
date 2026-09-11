@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
+import { apiAuthLogin } from '../../lib/apiClient';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,13 +17,23 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setSubmitting(true);
-    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (isSupabaseConfigured) {
+      const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+      if (!err) {
+        setSubmitting(false);
+        router.push('/');
+        return;
+      }
+    }
+
+    const authRes = await apiAuthLogin(email, password);
     setSubmitting(false);
-    if (err) {
-      setError(err.message);
+    if (authRes.success || authRes.user) {
+      window.location.href = '/';
       return;
     }
-    router.push('/');
+    setError(authRes.error || 'Failed to log in');
   }
 
   return (
